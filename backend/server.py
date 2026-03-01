@@ -14,7 +14,7 @@ def compile_code():
     optimize = data.get('optimize', 'energy')
     
     # Save the incoming source code to a file
-    test_file = "test_workloads/matrix_mult.c"
+    test_file = "../data/matrix_mult.c"
     with open(test_file, "w") as f:
         f.write(source_code)
         

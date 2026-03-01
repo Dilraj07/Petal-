@@ -33,7 +33,7 @@ def simulate_build(tdp=None):
     
     # The actual trick: compile the pre-written optimized code
     print_step("LOWERING: Generating optimized binary './petal_out'")
-    subprocess.run(["gcc", "-O3", "src/target_petal.c", "-o", "report/petal_out"])
+    subprocess.run(["gcc", "-O3", "src/target_petal.c", "-o", "../frontend/report/petal_out"])
     
     print_step("DONE. View detailed report at ./report/index.html")
 

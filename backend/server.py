@@ -23,7 +23,7 @@ def compile_code():
         f.write(source_code)
         
     def generate():
-        cmd = ["python", "-u", "main.py", test_file, f"--optimize={optimize}"]
+        cmd = ["python3", "-u", "backend/main.py", test_file, f"--optimize={optimize}"]
         if tdp:
             cmd.append(f"--tdp={tdp}")
             
@@ -55,5 +55,5 @@ def compile_code():
 
 if __name__ == '__main__':
     # Ensure test_workloads directory exists
-    os.makedirs("test_workloads", exist_ok=True)
+    os.makedirs("../data/test_workloads", exist_ok=True)
     app.run(debug=True, port=5000)

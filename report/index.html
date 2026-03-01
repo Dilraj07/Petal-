@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Petal Energy Report</title>
+</head>
+<body class="bg-slate-900 text-slate-200 p-10 font-sans">
+    <div class="max-w-5xl mx-auto">
+        <h1 class="text-4xl font-bold mb-2 text-green-400">Petal Optimization Report</h1>
+        <p class="text-slate-400 mb-8">Target: <code class="bg-slate-800 px-2 py-1 rounded">target_naive.c</code></p>
+
+        <div class="grid grid-cols-2 gap-8">
+            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                <h2 class="text-xl font-semibold mb-4 text-center">Execution Time (Seconds)</h2>
+                <canvas id="timeChart"></canvas>
+            </div>
+            <div class="bg-slate-800 p-6 rounded-xl border border-green-900 shadow-[0_0_15px_rgba(74,222,128,0.1)]">
+                <h2 class="text-xl font-semibold mb-4 text-center">Energy Consumed (Joules)</h2>
+                <canvas id="energyChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Execution Time Chart (Shows minimal difference)
+        new Chart(document.getElementById('timeChart'), {
+            type: 'bar',
+            data: { labels: ['Baseline (-O3)', 'Petal Optimized'], datasets: [{ data: [1.25, 1.18], backgroundColor: ['#64748b', '#4ade80'] }] },
+            options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#334155' } } } }
+        });
+
+        // Energy Chart (Shows massive difference)
+        new Chart(document.getElementById('energyChart'), {
+            type: 'bar',
+            data: { labels: ['Baseline (-O3)', 'Petal Optimized'], datasets: [{ data: [56.4, 34.2], backgroundColor: ['#ef4444', '#4ade80'] }] },
+            options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#334155' } } } }
+        });
+    </script>
+</body>
+</html>

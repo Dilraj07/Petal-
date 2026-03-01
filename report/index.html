@@ -178,7 +178,7 @@
     .hero-mosaic-img {
       position: absolute;
       inset: 0;
-      background: url('../assets/images/background2.jpg') center/cover no-repeat;
+      background: url('../assets/images/hero_background.jpg') center/cover no-repeat;
       opacity: 0.8;
     }
 
@@ -1598,6 +1598,20 @@
         padding: 0 1.5rem
       }
     }
+
+    @media print {
+      .navbar {
+        display: none !important;
+      }
+      body {
+        background: white !important;
+        color: black !important;
+      }
+      .container {
+        max-width: 100% !important;
+        padding: 0 !important;
+      }
+    }
   </style>
 </head>
 
@@ -1629,8 +1643,7 @@
         </div>
       </div>
       <div class="nav-right">
-        <button class="nav-btn">Docs</button>
-        <button class="nav-btn filled">Report</button>
+        <button class="nav-btn filled" onclick="window.print()">PDF Report</button>
       </div>
     </div>
   </nav>

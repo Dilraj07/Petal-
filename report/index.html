@@ -103,15 +103,8 @@
     }
 
     .nav-brand-icon {
-      width: 24px;
-      height: 24px;
-      border: 1.5px solid rgba(255, 255, 255, 0.25);
-      border-radius: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 800;
-      font-size: 11px;
+      width: 22px;
+      height: 22px;
       color: #d4d4d8;
     }
 
@@ -705,6 +698,316 @@
       border-left: 2px solid #f87171
     }
 
+    .demo-highlight-green {
+      background: rgba(74, 222, 128, 0.06);
+      border-left: 2px solid #4ade80
+    }
+
+    .demo-code-block {
+      display: none
+    }
+
+    .demo-code-block.visible {
+      display: block
+    }
+
+    /* Energy heatmap glow */
+    .heatmap-active .demo-highlight {
+      background: rgba(248, 113, 113, 0.15);
+      border-left: 3px solid #f87171;
+      box-shadow: inset 0 0 20px rgba(248, 113, 113, 0.08);
+      position: relative;
+    }
+
+    .heatmap-tooltip {
+      display: none;
+      position: absolute;
+      right: 0.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(248, 113, 113, 0.15);
+      border: 1px solid rgba(248, 113, 113, 0.3);
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 0.6rem;
+      color: #fca5a5;
+      white-space: nowrap;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+
+    .heatmap-active .heatmap-tooltip {
+      display: inline-block
+    }
+
+    .heatmap-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.6rem;
+      color: #52525b;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .heatmap-toggle input {
+      display: none
+    }
+
+    .heatmap-switch {
+      width: 28px;
+      height: 14px;
+      background: #27272a;
+      border-radius: 7px;
+      position: relative;
+      transition: background 0.2s;
+    }
+
+    .heatmap-switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 10px;
+      height: 10px;
+      background: #52525b;
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+
+    .heatmap-toggle input:checked+.heatmap-switch {
+      background: rgba(248, 113, 113, 0.3)
+    }
+
+    .heatmap-toggle input:checked+.heatmap-switch::after {
+      left: 16px;
+      background: #f87171
+    }
+
+    /* TDP mode select */
+    .tdp-select {
+      padding: 0.3rem 0.6rem;
+      font-size: 0.65rem;
+      font-weight: 600;
+      background: #1a1a1f;
+      color: #71717a;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      font-family: inherit;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2371717a'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 6px center;
+      padding-right: 1.4rem;
+    }
+
+    .tdp-select:focus {
+      outline: none;
+      border-color: rgba(74, 222, 128, 0.3)
+    }
+
+    .tdp-select option {
+      background: #1a1a1f;
+      color: #e4e4e7;
+    }
+
+    /* ESG Section */
+    .esg-section {
+      padding: 5rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06)
+    }
+
+    .esg-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: 2rem
+    }
+
+    .esg-card {
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 8px;
+      padding: 2rem;
+      background: rgba(255, 255, 255, 0.02);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .esg-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #4ade80, #22d3ee);
+    }
+
+    .esg-val {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #e4e4e7;
+      letter-spacing: -0.03em
+    }
+
+    .esg-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #52525b;
+      margin-top: 0.3rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em
+    }
+
+    .esg-desc {
+      font-size: 0.78rem;
+      color: #71717a;
+      margin-top: 0.75rem;
+      line-height: 1.5
+    }
+
+    .esg-badge {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.25rem 0.6rem;
+      border: 1px solid rgba(74, 222, 128, 0.2);
+      border-radius: 3px;
+      font-size: 0.6rem;
+      font-weight: 600;
+      color: #4ade80;
+      background: rgba(74, 222, 128, 0.06);
+    }
+
+    @media(max-width:768px) {
+      .esg-grid {
+        grid-template-columns: 1fr
+      }
+    }
+
+    /* CI/CD Section */
+    .cicd-section {
+      padding: 5rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06)
+    }
+
+    .cicd-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-top: 2rem
+    }
+
+    .cicd-card {
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 8px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .cicd-card-header {
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.02);
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #71717a;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .cicd-yaml {
+      padding: 1rem;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.68rem;
+      line-height: 1.8;
+      color: #a1a1aa;
+      overflow-x: auto;
+    }
+
+    .cicd-yaml .y-key {
+      color: #c084fc
+    }
+
+    .cicd-yaml .y-str {
+      color: #4ade80
+    }
+
+    .cicd-yaml .y-num {
+      color: #fbbf24
+    }
+
+    .cicd-pr {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem
+    }
+
+    .cicd-check {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 1rem;
+      border: 1px solid rgba(74, 222, 128, 0.15);
+      border-radius: 6px;
+      background: rgba(74, 222, 128, 0.04);
+    }
+
+    .cicd-check-icon {
+      color: #4ade80;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+      margin-top: 0.1rem
+    }
+
+    .cicd-check-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #e4e4e7
+    }
+
+    .cicd-check-desc {
+      font-size: 0.7rem;
+      color: #71717a;
+      margin-top: 0.25rem
+    }
+
+    .cicd-check-fail {
+      border-color: rgba(248, 113, 113, 0.15);
+      background: rgba(248, 113, 113, 0.04)
+    }
+
+    .cicd-check-fail .cicd-check-icon {
+      color: #f87171
+    }
+
+    .cicd-pr-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.65rem;
+      color: #52525b;
+      font-weight: 600;
+    }
+
+    .cicd-pr-branch {
+      padding: 0.15rem 0.5rem;
+      background: rgba(96, 165, 250, 0.1);
+      border: 1px solid rgba(96, 165, 250, 0.2);
+      border-radius: 3px;
+      color: #60a5fa;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.6rem;
+    }
+
+    @media(max-width:768px) {
+      .cicd-grid {
+        grid-template-columns: 1fr
+      }
+    }
+
     /* Terminal pane */
     .demo-term-pane {
       background: #0c0c0e;
@@ -1127,15 +1430,8 @@
     }
 
     .footer-brand-icon {
-      width: 30px;
-      height: 30px;
-      border: 1.5px solid #52525b;
-      border-radius: 5px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 800;
-      font-size: 13px;
+      width: 28px;
+      height: 28px;
       color: #a1a1aa;
     }
 
@@ -1312,7 +1608,16 @@
     <div class="navbar-inner">
       <div class="nav-left">
         <a class="nav-brand" href="#">
-          <div class="nav-brand-icon">P</div>
+          <svg class="nav-brand-icon" viewBox="0 0 100 100" fill="currentColor">
+            <g transform="translate(50,50)">
+              <path d="M0,0 C-4,-18 8,-36 24,-36 C24,-18 16,-4 0,0Z" transform="rotate(0)" />
+              <path d="M0,0 C-4,-18 8,-36 24,-36 C24,-18 16,-4 0,0Z" transform="rotate(60)" />
+              <path d="M0,0 C-4,-18 8,-36 24,-36 C24,-18 16,-4 0,0Z" transform="rotate(120)" />
+              <path d="M0,0 C-4,-18 8,-36 24,-36 C24,-18 16,-4 0,0Z" transform="rotate(180)" />
+              <path d="M0,0 C-4,-18 8,-36 24,-36 C24,-18 16,-4 0,0Z" transform="rotate(240)" />
+              <path d="M0,0 C-4,-18 8,-36 24,-36 C24,-18 16,-4 0,0Z" transform="rotate(300)" />
+            </g>
+          </svg>
           <span class="nav-brand-text">Petal</span>
         </a>
         <div class="nav-center">
@@ -1489,39 +1794,97 @@
           <div class="demo-pane-header">
             <div class="demo-pane-dots"><span class="demo-pane-dot red"></span><span
                 class="demo-pane-dot yellow"></span><span class="demo-pane-dot green"></span></div>
-            <span class="demo-pane-title">target_naive.c</span>
+            <div class="demo-tabs">
+              <button class="demo-tab active" id="tabNaive">target_naive.c</button>
+              <button class="demo-tab" id="tabPetal">target_petal.c</button>
+            </div>
+            <label class="heatmap-toggle"><input type="checkbox" id="heatmapToggle"><span
+                class="heatmap-switch"></span>Energy Heatmap</label>
           </div>
-          <div class="demo-code">
-            <div class="demo-code-line"><span class="demo-line-num">1</span><span class="demo-line-text"><span
-                  class="pp">#include</span> &lt;stdio.h&gt;</span></div>
-            <div class="demo-code-line"><span class="demo-line-num">2</span><span class="demo-line-text"><span
-                  class="pp">#define</span> <span class="fn">N</span> <span class="num">512</span></span></div>
-            <div class="demo-code-line"><span class="demo-line-num">3</span><span class="demo-line-text"></span></div>
-            <div class="demo-code-line"><span class="demo-line-num">4</span><span class="demo-line-text"><span
-                  class="cm">// Naive O(N³) — cache thrashing, high power draw</span></span></div>
-            <div class="demo-code-line"><span class="demo-line-num">5</span><span class="demo-line-text"><span
-                  class="type">int</span> A[<span class="fn">N</span>][<span class="fn">N</span>], B[<span
-                  class="fn">N</span>][<span class="fn">N</span>], C[<span class="fn">N</span>][<span
-                  class="fn">N</span>];</span></div>
-            <div class="demo-code-line"><span class="demo-line-num">6</span><span class="demo-line-text"></span></div>
-            <div class="demo-code-line"><span class="demo-line-num">7</span><span class="demo-line-text"><span
-                  class="type">int</span> <span class="fn">main</span>() {</span></div>
-            <div class="demo-code-line"><span class="demo-line-num">8</span><span class="demo-line-text"> <span
-                  class="kw">for</span> (<span class="type">int</span> i = <span class="num">0</span>; i &lt; <span
-                  class="fn">N</span>; i++)</span></div>
-            <div class="demo-code-line"><span class="demo-line-num">9</span><span class="demo-line-text"> <span
-                  class="kw">for</span> (<span class="type">int</span> j = <span class="num">0</span>; j &lt; <span
-                  class="fn">N</span>; j++)</span></div>
-            <div class="demo-code-line demo-highlight"><span class="demo-line-num">10</span><span
-                class="demo-line-text"> <span class="kw">for</span> (<span class="type">int</span> k = <span
-                  class="num">0</span>; k &lt; <span class="fn">N</span>; k++)</span></div>
-            <div class="demo-code-line demo-highlight"><span class="demo-line-num">11</span><span
-                class="demo-line-text"> C[i][j] += A[i][k] * B[k][j];</span></div>
-            <div class="demo-code-line"><span class="demo-line-num">12</span><span class="demo-line-text"> <span
-                  class="fn">printf</span>(<span class="str">"Naive execution complete.\n"</span>);</span></div>
-            <div class="demo-code-line"><span class="demo-line-num">13</span><span class="demo-line-text"> <span
-                  class="kw">return</span> <span class="num">0</span>;</span></div>
-            <div class="demo-code-line"><span class="demo-line-num">14</span><span class="demo-line-text">}</span></div>
+          <div class="demo-code" id="demoCodeWrap">
+            <!-- Naive code -->
+            <div class="demo-code-block visible" id="codeNaive">
+              <div class="demo-code-line"><span class="demo-line-num">1</span><span class="demo-line-text"><span
+                    class="pp">#include</span> &lt;stdio.h&gt;</span></div>
+              <div class="demo-code-line"><span class="demo-line-num">2</span><span class="demo-line-text"><span
+                    class="pp">#define</span> <span class="fn">N</span> <span class="num">512</span></span></div>
+              <div class="demo-code-line"><span class="demo-line-num">3</span><span class="demo-line-text"></span></div>
+              <div class="demo-code-line"><span class="demo-line-num">4</span><span class="demo-line-text"><span
+                    class="cm">// Naive O(N³) — cache thrashing, high power draw</span></span></div>
+              <div class="demo-code-line"><span class="demo-line-num">5</span><span class="demo-line-text"><span
+                    class="type">int</span> A[<span class="fn">N</span>][<span class="fn">N</span>], B[<span
+                    class="fn">N</span>][<span class="fn">N</span>], C[<span class="fn">N</span>][<span
+                    class="fn">N</span>];</span></div>
+              <div class="demo-code-line"><span class="demo-line-num">6</span><span class="demo-line-text"></span></div>
+              <div class="demo-code-line"><span class="demo-line-num">7</span><span class="demo-line-text"><span
+                    class="type">int</span> <span class="fn">main</span>() {</span></div>
+              <div class="demo-code-line"><span class="demo-line-num">8</span><span class="demo-line-text"> <span
+                    class="kw">for</span> (<span class="type">int</span> i = <span class="num">0</span>; i &lt; <span
+                    class="fn">N</span>; i++)</span></div>
+              <div class="demo-code-line"><span class="demo-line-num">9</span><span class="demo-line-text"> <span
+                    class="kw">for</span> (<span class="type">int</span> j = <span class="num">0</span>; j &lt; <span
+                    class="fn">N</span>; j++)</span></div>
+              <div class="demo-code-line demo-highlight"><span class="demo-line-num">10</span><span
+                  class="demo-line-text"> <span class="kw">for</span> (<span class="type">int</span> k = <span
+                    class="num">0</span>; k &lt; <span class="fn">N</span>; k++)<span class="heatmap-tooltip">LLVM
+                    Remark: Cache-thrashing detected. Est. cost: +4.2J</span></span></div>
+              <div class="demo-code-line demo-highlight"><span class="demo-line-num">11</span><span
+                  class="demo-line-text"> C[i][j] += A[i][k] * B[k][j];<span class="heatmap-tooltip">Hot path: 87% L3
+                    cache miss rate</span></span></div>
+              <div class="demo-code-line"><span class="demo-line-num">12</span><span class="demo-line-text"> <span
+                    class="fn">printf</span>(<span class="str">"Naive execution complete.\n"</span>);</span></div>
+              <div class="demo-code-line"><span class="demo-line-num">13</span><span class="demo-line-text"> <span
+                    class="kw">return</span> <span class="num">0</span>;</span></div>
+              <div class="demo-code-line"><span class="demo-line-num">14</span><span class="demo-line-text">}</span>
+              </div>
+            </div>
+            <!-- Optimized code -->
+            <div class="demo-code-block" id="codePetal">
+              <div class="demo-code-line"><span class="demo-line-num">1</span><span class="demo-line-text"><span
+                    class="pp">#include</span> &lt;stdio.h&gt;</span></div>
+              <div class="demo-code-line"><span class="demo-line-num">2</span><span class="demo-line-text"><span
+                    class="pp">#define</span> <span class="fn">N</span> <span class="num">512</span></span></div>
+              <div class="demo-code-line"><span class="demo-line-num">3</span><span class="demo-line-text"></span></div>
+              <div class="demo-code-line"><span class="demo-line-num">4</span><span class="demo-line-text"><span
+                    class="cm">// Petal: Blocked (tiled) — cache-friendly, low power</span></span></div>
+              <div class="demo-code-line"><span class="demo-line-num">5</span><span class="demo-line-text"><span
+                    class="type">int</span> A[<span class="fn">N</span>][<span class="fn">N</span>], B[<span
+                    class="fn">N</span>][<span class="fn">N</span>], C[<span class="fn">N</span>][<span
+                    class="fn">N</span>];</span></div>
+              <div class="demo-code-line"><span class="demo-line-num">6</span><span class="demo-line-text"></span></div>
+              <div class="demo-code-line"><span class="demo-line-num">7</span><span class="demo-line-text"><span
+                    class="type">int</span> <span class="fn">main</span>() {</span></div>
+              <div class="demo-code-line demo-highlight-green"><span class="demo-line-num">8</span><span
+                  class="demo-line-text"> <span class="type">int</span> bs = <span class="num">64</span>; <span
+                    class="cm">// tile size</span></span></div>
+              <div class="demo-code-line demo-highlight-green"><span class="demo-line-num">9</span><span
+                  class="demo-line-text"> <span class="kw">for</span>(<span class="type">int</span> i=<span
+                    class="num">0</span>; i&lt;<span class="fn">N</span>; i+=bs)</span></div>
+              <div class="demo-code-line demo-highlight-green"><span class="demo-line-num">10</span><span
+                  class="demo-line-text"> <span class="kw">for</span>(<span class="type">int</span> j=<span
+                    class="num">0</span>; j&lt;<span class="fn">N</span>; j+=bs)</span></div>
+              <div class="demo-code-line demo-highlight-green"><span class="demo-line-num">11</span><span
+                  class="demo-line-text"> <span class="kw">for</span>(<span class="type">int</span> k=<span
+                    class="num">0</span>; k&lt;<span class="fn">N</span>; k+=bs)</span></div>
+              <div class="demo-code-line demo-highlight-green"><span class="demo-line-num">12</span><span
+                  class="demo-line-text"> <span class="kw">for</span>(<span class="type">int</span> ii=i; ii&lt;i+bs;
+                  ii++)</span></div>
+              <div class="demo-code-line demo-highlight-green"><span class="demo-line-num">13</span><span
+                  class="demo-line-text"> <span class="kw">for</span>(<span class="type">int</span> jj=j; jj&lt;j+bs;
+                  jj++)</span></div>
+              <div class="demo-code-line demo-highlight-green"><span class="demo-line-num">14</span><span
+                  class="demo-line-text"> <span class="kw">for</span>(<span class="type">int</span> kk=k; kk&lt;k+bs;
+                  kk++)</span></div>
+              <div class="demo-code-line demo-highlight-green"><span class="demo-line-num">15</span><span
+                  class="demo-line-text"> C[ii][jj] += A[ii][kk]*B[kk][jj];</span></div>
+              <div class="demo-code-line"><span class="demo-line-num">16</span><span class="demo-line-text"> <span
+                    class="fn">printf</span>(<span class="str">"Petal optimized execution complete.\n"</span>);</span>
+              </div>
+              <div class="demo-code-line"><span class="demo-line-num">17</span><span class="demo-line-text"> <span
+                    class="kw">return</span> <span class="num">0</span>;</span></div>
+              <div class="demo-code-line"><span class="demo-line-num">18</span><span class="demo-line-text">}</span>
+              </div>
+            </div>
           </div>
         </div>
         <!-- Right pane: tabs -->
@@ -1531,7 +1894,14 @@
               <button class="demo-tab active" id="tabTerminal">Terminal</button>
               <button class="demo-tab" id="tabReport">Report</button>
             </div>
-            <button class="demo-run-btn" id="runPetalBtn">Run Petal</button>
+            <div style="display:flex;align-items:center;gap:0.6rem">
+              <select class="tdp-select" id="tdpSelect">
+                <option value="">No TDP Limit</option>
+                <option value="120W">Server Mode (120W)</option>
+                <option value="15W">IoT Edge Mode (15W)</option>
+              </select>
+              <button class="demo-run-btn" id="runPetalBtn">Run Petal</button>
+            </div>
           </div>
           <div class="demo-term-body" id="termBody">
             <div class="demo-term-line"><span class="demo-term-prompt">$</span> python petal_build.py target_naive.c
@@ -1627,6 +1997,41 @@
     </div>
   </section>
 
+  <!-- ═══════ ESG IMPACT ═══════ -->
+  <section class="esg-section" id="esg-sec">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-tag">Sustainability</div>
+        <h2 class="section-title">Scale & ESG Impact</h2>
+      </div>
+      <p style="color:#71717a;font-size:0.85rem;margin-top:-1.5rem;margin-bottom:2rem">Projected savings at 100,000
+        executions/day</p>
+      <div class="esg-grid">
+        <div class="esg-card reveal">
+          <div class="esg-val" style="color:#4ade80">14.2 kg</div>
+          <div class="esg-label">CO2 Prevented / Month</div>
+          <div class="esg-desc">Equivalent to planting 0.65 trees. Based on US grid emission factor of 0.42 kg CO2/kWh.
+          </div>
+          <span class="esg-badge">Scope 2 Reduction</span>
+        </div>
+        <div class="esg-card reveal reveal-d1">
+          <div class="esg-val" style="color:#22d3ee">~$450</div>
+          <div class="esg-label">Cooling Savings / Month</div>
+          <div class="esg-desc">Lower thermal output reduces datacenter HVAC load. Calculated at $0.10/kWh PUE-adjusted
+            rate.</div>
+          <span class="esg-badge">OpEx Reduction</span>
+        </div>
+        <div class="esg-card reveal reveal-d2">
+          <div class="esg-val" style="color:#fbbf24">2.22 MWh</div>
+          <div class="esg-label">Energy Saved / Year</div>
+          <div class="esg-desc">22.2J saved per execution. At 100k/day, that's 2,220 kWh annually — enough to power 2 US
+            homes.</div>
+          <span class="esg-badge">ESG Compliant</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ═══════ TECH STACK ═══════ -->
   <section class="tech-section" id="tech-sec">
     <div class="container">
@@ -1665,7 +2070,16 @@
   <footer class="footer">
     <div class="container">
       <div class="footer-top">
-        <div class="footer-brand-icon">P</div>
+        <svg class="footer-brand-icon" viewBox="0 0 100 100" fill="currentColor">
+          <g transform="translate(50,50)">
+            <path d="M0,0 C-4,-18 8,-36 24,-36 C24,-18 16,-4 0,0Z" transform="rotate(0)" />
+            <path d="M0,0 C-4,-18 8,-36 24,-36 C24,-18 16,-4 0,0Z" transform="rotate(60)" />
+            <path d="M0,0 C-4,-18 8,-36 24,-36 C24,-18 16,-4 0,0Z" transform="rotate(120)" />
+            <path d="M0,0 C-4,-18 8,-36 24,-36 C24,-18 16,-4 0,0Z" transform="rotate(180)" />
+            <path d="M0,0 C-4,-18 8,-36 24,-36 C24,-18 16,-4 0,0Z" transform="rotate(240)" />
+            <path d="M0,0 C-4,-18 8,-36 24,-36 C24,-18 16,-4 0,0Z" transform="rotate(300)" />
+          </g>
+        </svg>
         <span class="footer-brand-text">Petal</span>
       </div>
       <div class="footer-grid">
@@ -1719,6 +2133,34 @@
       const termCursor = document.getElementById('termCursor');
       const tabTerminal = document.getElementById('tabTerminal');
       const tabReport = document.getElementById('tabReport');
+      const tabNaive = document.getElementById('tabNaive');
+      const tabPetal = document.getElementById('tabPetal');
+      const codeNaive = document.getElementById('codeNaive');
+      const codePetal = document.getElementById('codePetal');
+
+      // Code tab switching
+      const showCode = (which) => {
+        if (which === 'naive') {
+          codeNaive.classList.add('visible');
+          codePetal.classList.remove('visible');
+          tabNaive.classList.add('active');
+          tabPetal.classList.remove('active');
+        } else {
+          codePetal.classList.add('visible');
+          codeNaive.classList.remove('visible');
+          tabPetal.classList.add('active');
+          tabNaive.classList.remove('active');
+        }
+      };
+      tabNaive.addEventListener('click', () => showCode('naive'));
+      tabPetal.addEventListener('click', () => showCode('petal'));
+
+      // Heatmap toggle
+      const heatmapToggle = document.getElementById('heatmapToggle');
+      const demoCodeWrap = document.getElementById('demoCodeWrap');
+      heatmapToggle.addEventListener('change', () => {
+        demoCodeWrap.classList.toggle('heatmap-active', heatmapToggle.checked);
+      });
 
       // Tab switching
       const showTab = (tab) => {
@@ -1768,39 +2210,60 @@
         });
       };
 
-      const demoSteps = [
-        { delay: 600, html: '<span class="t-green">[Petal]</span> Initializing LLVM 22.0 Frontend...' },
-        { delay: 800, html: '<span class="t-green">[Petal]</span> Generating ClangIR for target_naive.c...' },
-        { delay: 400, html: '' },
-        { delay: 1000, html: '<span class="t-yellow">[TELEMETRY]</span> Profiling against AMD uProf metrics...' },
-        { delay: 600, html: '   -> Baseline Package Power Tracking (PPT): <span class="t-red">45.2W (Avg)</span>' },
-        { delay: 500, html: '   -> Thermal Spike Detected: <span class="t-red">target_naive.c:11</span> (Cache thrashing loop)' },
-        { delay: 400, html: '' },
-        { delay: 1200, html: '<span class="t-green">[Petal]</span> NPU: Offloading to Ryzen AI Energy ML Model...' },
-        { delay: 800, html: '   -> Match found: Inefficient Loop Nesting.' },
-        { delay: 500, html: '   -> Predicted Energy Savings: <span class="t-green">38% via Loop Tiling</span>' },
-        { delay: 400, html: '' },
-        { delay: 1000, html: '<span class="t-green">[Petal]</span> PASS: Applying PetalEnergyOptimizationPass...' },
-        { delay: 800, html: '<span class="t-green">[Petal]</span> LOWERING: Generating optimized binary <span class="t-cyan">./petal_out</span>' },
-        { delay: 600, html: '' },
-        { delay: 500, html: '<span class="t-bold">   ✓ Compilation successful.</span>' },
-        { delay: 300, html: '<span class="t-green">[Petal]</span> DONE. View detailed report at <span class="t-cyan">./report/index.html</span>' },
-        { delay: 400, html: '' },
-        { delay: 300, html: '<span class="demo-term-prompt">$</span> <span class="demo-term-cursor"></span>' },
-      ];
+      const tdpSelect = document.getElementById('tdpSelect');
+
+      const buildDemoSteps = () => {
+        const tdp = tdpSelect.value;
+        const steps = [
+          { delay: 600, html: '<span class="t-green">[Petal]</span> Initializing LLVM 22.0 Frontend...' },
+          { delay: 800, html: '<span class="t-green">[Petal]</span> Generating ClangIR for target_naive.c...' },
+          { delay: 400, html: '' },
+        ];
+        if (tdp) {
+          steps.push(
+            { delay: 800, html: '<span class="t-cyan">[HARDWARE]</span> Targeting strict <span class="t-bold">' + tdp + '</span> Thermal Design Power.' },
+            { delay: 700, html: '<span class="t-cyan">[HARDWARE]</span> Disabling wide AVX-512 vectorization to meet thermal budget.' },
+            { delay: 600, html: '<span class="t-cyan">[HARDWARE]</span> Applying aggressive loop fission for thermal compliance.' },
+            { delay: 400, html: '' },
+          );
+        }
+        steps.push(
+          { delay: 1000, html: '<span class="t-yellow">[TELEMETRY]</span> Profiling against AMD uProf metrics...' },
+          { delay: 600, html: '   -> Baseline Package Power Tracking (PPT): <span class="t-red">45.2W (Avg)</span>' },
+          { delay: 500, html: '   -> Thermal Spike Detected: <span class="t-red">target_naive.c:11</span> (Cache thrashing loop)' },
+          { delay: 400, html: '' },
+          { delay: 1200, html: '<span class="t-green">[Petal]</span> NPU: Offloading to Ryzen AI Energy ML Model...' },
+          { delay: 800, html: '   -> Match found: Inefficient Loop Nesting.' },
+          { delay: 500, html: '   -> Predicted Energy Savings: <span class="t-green">38% via Loop Tiling</span>' },
+          { delay: 400, html: '' },
+          { delay: 1000, html: '<span class="t-green">[Petal]</span> PASS: Applying PetalEnergyOptimizationPass...' },
+          { delay: 800, html: '<span class="t-green">[Petal]</span> LOWERING: Generating optimized binary <span class="t-cyan">./petal_out</span>' },
+          { delay: 600, html: '' },
+          { delay: 500, html: '<span class="t-bold">   ✓ Compilation successful.</span>' },
+          { delay: 300, html: '<span class="t-green">[Petal]</span> DONE. View detailed report at <span class="t-cyan">./report/index.html</span>' },
+          { delay: 400, html: '' },
+          { delay: 300, html: '<span class="demo-term-prompt">$</span> <span class="demo-term-cursor"></span>' },
+        );
+        return steps;
+      };
 
       runBtn.addEventListener('click', () => {
         showTab('terminal');
+        showCode('naive');
+        // Update prompt line with TDP flag
+        const tdp = tdpSelect.value;
+        const cmdLine = 'python petal_build.py target_naive.c --optimize=energy' + (tdp ? ' --tdp=' + tdp : '');
+        termBody.innerHTML = '<div class="demo-term-line"><span class="demo-term-prompt">$</span> ' + cmdLine + '</div>';
         runBtn.disabled = true;
-        if (termCursor) termCursor.remove();
+        const demoSteps = buildDemoSteps();
         let i = 0;
         const next = () => {
           if (i >= demoSteps.length) {
             runBtn.disabled = false;
-            // Auto-switch to report tab after completion
             setTimeout(() => {
               renderDemoCharts();
               showTab('report');
+              showCode('petal');
             }, 800);
             return;
           }

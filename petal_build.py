@@ -7,10 +7,17 @@ def print_step(msg, delay=0.8):
     print(f"[\033[92mPetal\033[0m] {msg}")
     time.sleep(delay)
 
-def simulate_build():
+def simulate_build(tdp=None):
     print_step("Initializing LLVM 22.0 Frontend...")
     print_step("Generating ClangIR for target_naive.c...")
     
+    if tdp:
+        print(f"\n[\033[96mHARDWARE\033[0m] Targeting strict \033[1m{tdp}\033[0m Thermal Design Power.")
+        time.sleep(0.8)
+        print(f"[\033[96mHARDWARE\033[0m] Disabling wide AVX-512 vectorization to meet thermal budget.")
+        print(f"[\033[96mHARDWARE\033[0m] Applying aggressive loop fission for thermal compliance.\n")
+        time.sleep(1.0)
+
     print("\n[\033[93mTELEMETRY\033[0m] Profiling against AMD uProf metrics...")
     time.sleep(1.2)
     print("   -> Baseline Package Power Tracking (PPT): \033[91m45.2W (Avg)\033[0m")
@@ -34,10 +41,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Petal Energy-Aware Compiler")
     parser.add_argument("file", help="Source file to compile")
     parser.add_argument("--optimize", help="Optimization target (e.g., energy)", default="speed")
+    parser.add_argument("--tdp", help="Thermal Design Power target (e.g., 15W)", default=None)
     args = parser.parse_args()
 
     if args.optimize == "energy":
-        simulate_build()
+        simulate_build(tdp=args.tdp)
     else:
         print("Standard compilation...")
         subprocess.run(["gcc", args.file, "-o", "a.out"])

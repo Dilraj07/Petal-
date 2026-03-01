@@ -6,9 +6,13 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-@app.route('/compile', methods=['POST'])
+@app.route('/compile', methods=['GET', 'POST'])
 def compile_code():
-    data = request.json
+    if request.method == 'POST':
+        data = request.json or {}
+    else:
+        data = request.args
+        
     source_code = data.get('source_code', '')
     tdp = data.get('tdp', None)
     optimize = data.get('optimize', 'energy')
@@ -27,6 +31,10 @@ def compile_code():
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
         
         for line in iter(process.stdout.readline, ''):
+            line = line.strip()
+            if line:
+                import time
+                time.sleep(0.5) # Add a tiny realistic delay for the "compilation feeling"
             yield f"data: {line}\n\n"
             
         process.stdout.close()
@@ -40,6 +48,8 @@ def compile_code():
             # Encode optimized code so it doesn't break SSE framing
             import json
             yield f"event: optimized_code\ndata: {json.dumps({'code': opt_code})}\n\n"
+            
+        yield f"event: done\ndata: done\n\n"
 
     return Response(generate(), mimetype='text/event-stream')
 

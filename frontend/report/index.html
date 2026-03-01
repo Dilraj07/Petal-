@@ -2217,12 +2217,18 @@
         if (termCursor) termCursor.remove();
 
         try {
-          // Get raw code content to send to backend
-          const rawCode = document.getElementById('codeNaive').innerText || document.getElementById('codeNaive').textContent;
+          // Robustly extract the C code line-by-line from the DOM, stripping nested tooltips
+          let rawCode = "";
+          document.getElementById('codeNaive').querySelectorAll('.demo-line-text').forEach(el => {
+            let clone = el.cloneNode(true);
+            let tooltips = clone.querySelectorAll('.heatmap-tooltip');
+            tooltips.forEach(t => t.remove());
+            rawCode += clone.textContent + "\n";
+          });
 
           // We use POST to send the code, but to get SSE back we need a specialized fetch or EventSource.
           // Since EventSource doesn't support POST with body natively, we'll use fetch and read the stream.
-          const response = await fetch('http://localhost:5000/compile', {
+          const response = await fetch('http://127.0.0.1:5000/compile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -2260,26 +2266,29 @@
                       console.error("Failed to parse optimized code", e);
                     }
                   }
+                } else if (part.startsWith("event: done")) {
+                  // Ignore done event line text
                 } else if (part.startsWith("data: ")) {
                   const lineData = part.replace("data: ", "").trim();
-                  // We skip empty lines for cleanliness or render them as breaks
-                  const line = document.createElement('div');
-                  line.className = 'demo-term-line';
 
-                  // Very basic ANSI escape parser for the predefined Petal colors
-                  let htmlLine = lineData
-                    .replace(/\\033\[92m/g, '<span class="t-green">')
-                    .replace(/\\033\[93m/g, '<span class="t-yellow">')
-                    .replace(/\\033\[94m/g, '<span class="t-cyan">')
-                    .replace(/\\033\[95m/g, '<span class="t-cyan">')
-                    .replace(/\\033\[96m/g, '<span class="t-cyan">')
-                    .replace(/\\033\[91m/g, '<span class="t-red">')
-                    .replace(/\\033\[1m/g, '<span class="t-bold">')
-                    .replace(/\\033\[0m/g, '</span>');
+                  if (lineData) {
+                    const line = document.createElement('div');
+                    line.className = 'demo-term-line';
 
-                  line.innerHTML = htmlLine || '<br/>';
-                  termBody.appendChild(line);
-                  termBody.scrollTop = termBody.scrollHeight;
+                    let htmlLine = lineData
+                      .replace(/\\033\[92m/g, '<span class="t-green">')
+                      .replace(/\\033\[93m/g, '<span class="t-yellow">')
+                      .replace(/\\033\[94m/g, '<span class="t-cyan">')
+                      .replace(/\\033\[95m/g, '<span class="t-cyan">')
+                      .replace(/\\033\[96m/g, '<span class="t-cyan">')
+                      .replace(/\\033\[91m/g, '<span class="t-red">')
+                      .replace(/\\033\[1m/g, '<span class="t-bold">')
+                      .replace(/\\033\[0m/g, '</span>');
+
+                    line.innerHTML = htmlLine;
+                    termBody.appendChild(line);
+                    termBody.scrollTop = termBody.scrollHeight;
+                  }
                 }
               }
             }

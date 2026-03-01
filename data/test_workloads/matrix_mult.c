@@ -1,18 +1,26 @@
+1
 #include <stdio.h>
+2
 #define N 512
-
-// Standard, naive O(N^3) matrix multiplication.
-// This keeps the processor awake, moving data constantly, drawing high power.
+3
+4
+// Naive O(N³) — cache thrashing, high power draw
+5
 int A[N][N], B[N][N], C[N][N];
-
+6
+7
 int main() {
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < N; j++) {
-            for (int k = 0; k < N; k++) {
-                C[i][j] += A[i][k] * B[k][j];
-            }
-        }
-    }
-    printf("Naive execution complete.\n");
-    return 0;
+8
+for (int i = 0; i < N; i++)
+9
+for (int j = 0; j < N; j++)
+10
+for (int k = 0; k < N; k++)
+11
+C[i][j] += A[i][k] * B[k][j];
+12
+printf("Naive execution complete.\n");
+13
+return 0;
+14
 }

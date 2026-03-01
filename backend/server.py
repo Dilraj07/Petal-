@@ -3,11 +3,15 @@ from flask_cors import CORS
 import subprocess
 import os
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../frontend', static_url_path='')
 CORS(app)
 
 BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.dirname(BACKEND_DIR)
+
+@app.route('/')
+def index():
+    return app.send_static_file('report/index.html')
 
 @app.route('/compile', methods=['GET', 'POST'])
 def compile_code():

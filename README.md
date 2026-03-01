@@ -1,4 +1,5 @@
 # Petal
+
 **An Energy-Aware, Hardware-in-the-Loop Compiler Plugin for C/C++**
 
 ---
@@ -8,6 +9,14 @@
 Modern compilers optimize for execution speed or binary size, but they are entirely blind to the **physical energy consumption** of the silicon. As the industry scales toward massive AI data centers and edge IoT deployments, this "energy blind spot" results in massive, unnecessary power draw.
 
 **Petal** bridges the gap between software engineers and hardware efficiency. It is an intelligent compilation pipeline that **profiles code using real-time AMD hardware telemetry**, **predicts energy costs via machine learning**, and **automatically transforms power-hungry LLVM Intermediate Representation (IR) into low-power equivalents**.
+
+---
+
+## Product Demo
+
+Check out the product demo video below:
+
+<video src="frontend/assets/demo.mov" width="800" controls></video>
 
 ---
 
@@ -37,12 +46,12 @@ flowchart LR
         P_B[B. Collects AMD uProf Telemetry]:::nodeItem
         P_C[C. Predicts Energy via XGBoost]:::nodeItem
         P_D[D. Rewrites Inefficient Instructions]:::nodeItem
-        
+
         P_A --> P_B
         P_B --> P_C
         P_C --> P_D
     end
-    
+
     Final[Final Optimized Binary]:::outputBox
 
     D1 ===> P_A
@@ -73,12 +82,12 @@ flowchart LR
 
 ## Technology Stack
 
-| Layer | Technologies |
-|---|---|
+| Layer                       | Technologies                     |
+| --------------------------- | -------------------------------- |
 | **Compiler Infrastructure** | LLVM 22+, Clang (C/C++), ClangIR |
-| **Machine Learning** | Python, XGBoost |
-| **Hardware Telemetry** | AMD uProf CLI, Linux `perf` |
-| **Reporting** | HTML5, Tailwind CSS, Chart.js |
+| **Machine Learning**        | Python, XGBoost                  |
+| **Hardware Telemetry**      | AMD uProf CLI, Linux `perf`      |
+| **Reporting**               | HTML5, Tailwind CSS, Chart.js    |
 
 ---
 
@@ -90,11 +99,11 @@ petal-hackathon/
 ├── petal_build.py          # Core Python CLI wrapper & ML simulation engine
 ├── README.md               # Project documentation
 │
-├── src/                    
+├── src/
 │   ├── target_naive.c      # Standard, high-power C algorithm (Baseline)
 │   └── target_petal.c      # Cache-friendly, low-power C algorithm (Target)
 │
-└── report/                 
+└── report/
     ├── index.html          # Dynamic Tailwind/Chart.js energy dashboard
     └── petal_out           # Final compiled executable
 ```

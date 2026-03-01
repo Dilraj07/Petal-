@@ -2212,70 +2212,107 @@
 
       const tdpSelect = document.getElementById('tdpSelect');
 
-      const buildDemoSteps = () => {
-        const tdp = tdpSelect.value;
-        const steps = [
-          { delay: 600, html: '<span class="t-green">[Petal]</span> Initializing LLVM 22.0 Frontend...' },
-          { delay: 800, html: '<span class="t-green">[Petal]</span> Generating ClangIR for target_naive.c...' },
-          { delay: 400, html: '' },
-        ];
-        if (tdp) {
-          steps.push(
-            { delay: 800, html: '<span class="t-cyan">[HARDWARE]</span> Targeting strict <span class="t-bold">' + tdp + '</span> Thermal Design Power.' },
-            { delay: 700, html: '<span class="t-cyan">[HARDWARE]</span> Disabling wide AVX-512 vectorization to meet thermal budget.' },
-            { delay: 600, html: '<span class="t-cyan">[HARDWARE]</span> Applying aggressive loop fission for thermal compliance.' },
-            { delay: 400, html: '' },
-          );
-        }
-        steps.push(
-          { delay: 1000, html: '<span class="t-yellow">[TELEMETRY]</span> Profiling against AMD uProf metrics...' },
-          { delay: 600, html: '   -> Baseline Package Power Tracking (PPT): <span class="t-red">45.2W (Avg)</span>' },
-          { delay: 500, html: '   -> Thermal Spike Detected: <span class="t-red">target_naive.c:11</span> (Cache thrashing loop)' },
-          { delay: 400, html: '' },
-          { delay: 1200, html: '<span class="t-green">[Petal]</span> NPU: Offloading to Ryzen AI Energy ML Model...' },
-          { delay: 800, html: '   -> Match found: Inefficient Loop Nesting.' },
-          { delay: 500, html: '   -> Predicted Energy Savings: <span class="t-green">38% via Loop Tiling</span>' },
-          { delay: 400, html: '' },
-          { delay: 1000, html: '<span class="t-green">[Petal]</span> PASS: Applying PetalEnergyOptimizationPass...' },
-          { delay: 800, html: '<span class="t-green">[Petal]</span> LOWERING: Generating optimized binary <span class="t-cyan">./petal_out</span>' },
-          { delay: 600, html: '' },
-          { delay: 500, html: '<span class="t-bold">   ✓ Compilation successful.</span>' },
-          { delay: 300, html: '<span class="t-green">[Petal]</span> DONE. View detailed report at <span class="t-cyan">./report/index.html</span>' },
-          { delay: 400, html: '' },
-          { delay: 300, html: '<span class="demo-term-prompt">$</span> <span class="demo-term-cursor"></span>' },
-        );
-        return steps;
-      };
-
-      runBtn.addEventListener('click', () => {
+      runBtn.addEventListener('click', async () => {
         showTab('terminal');
         showCode('naive');
-        // Update prompt line with TDP flag
         const tdp = tdpSelect.value;
-        const cmdLine = 'python petal_build.py target_naive.c --optimize=energy' + (tdp ? ' --tdp=' + tdp : '');
+        const cmdLine = 'python main.py target_naive.c --optimize=energy' + (tdp ? ' --tdp=' + tdp : '');
         termBody.innerHTML = '<div class="demo-term-line"><span class="demo-term-prompt">$</span> ' + cmdLine + '</div>';
         runBtn.disabled = true;
-        const demoSteps = buildDemoSteps();
-        let i = 0;
-        const next = () => {
-          if (i >= demoSteps.length) {
-            runBtn.disabled = false;
-            setTimeout(() => {
-              renderDemoCharts();
-              showTab('report');
-              showCode('petal');
-            }, 800);
-            return;
+        if (termCursor) termCursor.remove();
+
+        try {
+          // Get raw code content to send to backend
+          const rawCode = document.getElementById('codeNaive').innerText || document.getElementById('codeNaive').textContent;
+
+          // We use POST to send the code, but to get SSE back we need a specialized fetch or EventSource.
+          // Since EventSource doesn't support POST with body natively, we'll use fetch and read the stream.
+          const response = await fetch('http://localhost:5000/compile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              source_code: rawCode,
+              tdp: tdp || null,
+              optimize: 'energy'
+            })
+          });
+
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder("utf-8");
+          let isDone = false;
+          let buffer = "";
+
+          while (!isDone) {
+            const { value, done } = await reader.read();
+            isDone = done;
+            if (value) {
+              buffer += decoder.decode(value, { stream: true });
+              let parts = buffer.split("\n\n");
+              buffer = parts.pop(); // Keep incomplete piece in buffer
+
+              for (const part of parts) {
+                if (part.startsWith("event: optimized_code")) {
+                  const dataLine = part.split("\n").find(l => l.startsWith("data: "));
+                  if (dataLine) {
+                    try {
+                      const optData = JSON.parse(dataLine.replace("data: ", ""));
+                      // Place the optimized code in the Petal tab
+                      const codeElt = document.getElementById('codePetal').querySelector('code') || document.getElementById('codePetal');
+                      codeElt.textContent = optData.code;
+                      // Using Prism if available to highlight
+                      if (window.Prism) Prism.highlightElement(codeElt);
+                    } catch (e) {
+                      console.error("Failed to parse optimized code", e);
+                    }
+                  }
+                } else if (part.startsWith("data: ")) {
+                  const lineData = part.replace("data: ", "").trim();
+                  // We skip empty lines for cleanliness or render them as breaks
+                  const line = document.createElement('div');
+                  line.className = 'demo-term-line';
+
+                  // Very basic ANSI escape parser for the predefined Petal colors
+                  let htmlLine = lineData
+                    .replace(/\\033\[92m/g, '<span class="t-green">')
+                    .replace(/\\033\[93m/g, '<span class="t-yellow">')
+                    .replace(/\\033\[94m/g, '<span class="t-cyan">')
+                    .replace(/\\033\[95m/g, '<span class="t-cyan">')
+                    .replace(/\\033\[96m/g, '<span class="t-cyan">')
+                    .replace(/\\033\[91m/g, '<span class="t-red">')
+                    .replace(/\\033\[1m/g, '<span class="t-bold">')
+                    .replace(/\\033\[0m/g, '</span>');
+
+                  line.innerHTML = htmlLine || '<br/>';
+                  termBody.appendChild(line);
+                  termBody.scrollTop = termBody.scrollHeight;
+                }
+              }
+            }
           }
-          const step = demoSteps[i++];
-          const line = document.createElement('div');
-          line.className = 'demo-term-line';
-          line.innerHTML = step.html;
-          termBody.appendChild(line);
+
+          // Re-add prompt at end
+          const endPrompt = document.createElement('div');
+          endPrompt.className = 'demo-term-line';
+          endPrompt.innerHTML = '<span class="demo-term-prompt">$</span> <span class="demo-term-cursor"></span>';
+          termBody.appendChild(endPrompt);
           termBody.scrollTop = termBody.scrollHeight;
-          setTimeout(next, step.delay);
-        };
-        next();
+
+          // Finish execution phase
+          setTimeout(() => {
+            renderDemoCharts();
+            showTab('report');
+            showCode('petal');
+            runBtn.disabled = false;
+          }, 800);
+
+        } catch (err) {
+          console.error(err);
+          const errLine = document.createElement('div');
+          errLine.className = 'demo-term-line';
+          errLine.innerHTML = '<span class="t-red">Error: Failed to connect to Petal Backend (is server.py running?)</span>';
+          termBody.appendChild(errLine);
+          runBtn.disabled = false;
+        }
       });
 
       // ── Scroll-triggered typewriter ──

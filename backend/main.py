@@ -19,7 +19,7 @@ def main():
         print(f"Error: {args.file} not found.")
         return
 
-    with open(args.file, "r") as f:
+    with open(args.file, "r", encoding="utf-8") as f:
         source_code = f.read()
 
     if args.tdp:
@@ -39,7 +39,7 @@ def main():
             
             # Save optimized code
             opt_file = args.file.replace(".c", "_optimized.c")
-            with open(opt_file, "w") as f:
+            with open(opt_file, "w", encoding="utf-8") as f:
                 f.write(optimized_code)
             
             # Compile optimized code

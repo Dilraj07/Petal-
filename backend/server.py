@@ -6,6 +6,9 @@ import os
 app = Flask(__name__)
 CORS(app)
 
+BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(BACKEND_DIR)
+
 @app.route('/compile', methods=['GET', 'POST'])
 def compile_code():
     if request.method == 'POST':
@@ -18,12 +21,16 @@ def compile_code():
     optimize = data.get('optimize', 'energy')
     
     # Save the incoming source code to a file
-    test_file = "../data/matrix_mult.c"
-    with open(test_file, "w") as f:
+    test_dir = os.path.join(BASE_DIR, "data", "test_workloads")
+    os.makedirs(test_dir, exist_ok=True)
+    test_file = os.path.join(test_dir, "matrix_mult.c")
+    
+    with open(test_file, "w", encoding="utf-8") as f:
         f.write(source_code)
         
     def generate():
-        cmd = ["python3", "-u", "backend/main.py", test_file, f"--optimize={optimize}"]
+        main_py = os.path.join(BACKEND_DIR, "main.py")
+        cmd = ["python3", "-u", main_py, test_file, f"--optimize={optimize}"]
         if tdp:
             cmd.append(f"--tdp={tdp}")
             
@@ -43,7 +50,7 @@ def compile_code():
         # Finally, read the optimized code and send it as an event
         opt_file = test_file.replace(".c", "_optimized.c")
         if os.path.exists(opt_file):
-            with open(opt_file, "r") as f:
+            with open(opt_file, "r", encoding="utf-8") as f:
                 opt_code = f.read()
             # Encode optimized code so it doesn't break SSE framing
             import json
@@ -55,5 +62,6 @@ def compile_code():
 
 if __name__ == '__main__':
     # Ensure test_workloads directory exists
-    os.makedirs("../data/test_workloads", exist_ok=True)
+    test_dir = os.path.join(BASE_DIR, "data", "test_workloads")
+    os.makedirs(test_dir, exist_ok=True)
     app.run(debug=True, port=5000)

@@ -1,41 +1,798 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <title>Petal Energy Report</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Petal — Energy Optimization Report</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* ═══════════════════ RESET ═══════════════════ */
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      font-family:'Circular Std','Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+      background:#1a1a1f;
+      color:#d4d4d8;
+      -webkit-font-smoothing:antialiased;
+      overflow-x:hidden;
+    }
+    a{color:inherit;text-decoration:none}
+
+    /* ═══════════════════ GRID OUTLINE BG ═══════════════════ */
+    body::before{
+      content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size:80px 80px;
+    }
+
+    /* ═══════════════════ LAYOUT ═══════════════════ */
+    .container{max-width:1200px;margin:0 auto;padding:0 3rem;position:relative;z-index:1}
+    section{position:relative;z-index:1}
+
+    /* ═══════════════════ NAVBAR ═══════════════════ */
+    .navbar{
+      position:fixed;top:0;left:0;right:0;z-index:100;
+      padding:0 2.5rem;
+      height:56px;
+      background:rgba(26,26,31,0.6);
+      backdrop-filter:blur(20px) saturate(180%);
+      border-bottom:1px solid rgba(255,255,255,0.06);
+      transition:background 0.3s;
+    }
+    .navbar.scrolled{background:rgba(26,26,31,0.92)}
+    .navbar-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;height:100%;justify-content:space-between}
+    .nav-left{display:flex;align-items:center;gap:2.5rem}
+    .nav-brand{display:flex;align-items:center;gap:0.5rem}
+    .nav-brand-icon{
+      width:24px;height:24px;border:1.5px solid rgba(255,255,255,0.25);border-radius:4px;
+      display:flex;align-items:center;justify-content:center;
+      font-weight:800;font-size:11px;color:#d4d4d8;
+    }
+    .nav-brand-text{font-weight:700;font-size:0.95rem;color:#e4e4e7;letter-spacing:-0.02em}
+    .nav-center{display:flex;gap:1.5rem;align-items:center}
+    .nav-center a{
+      color:rgba(255,255,255,0.55);font-size:0.82rem;font-weight:500;
+      transition:color 0.2s;position:relative;
+    }
+    .nav-center a:hover{color:rgba(255,255,255,0.9)}
+    .nav-right{display:flex;align-items:center;gap:0.6rem}
+    .nav-btn{
+      padding:0.4rem 1rem;border:1px solid rgba(255,255,255,0.15);border-radius:4px;
+      font-size:0.78rem;font-weight:600;color:#e4e4e7;
+      background:rgba(255,255,255,0.06);transition:all 0.2s;cursor:pointer;
+      font-family:inherit;
+    }
+    .nav-btn:hover{border-color:rgba(255,255,255,0.25);background:rgba(255,255,255,0.1)}
+    .nav-btn.filled{
+      background:#e4e4e7;color:#1a1a1f;border-color:#e4e4e7;
+      font-weight:700;
+    }
+    .nav-btn.filled:hover{background:#fff}
+
+    /* ═══════════════════ HERO IMAGE GRID ═══════════════════ */
+    .hero-mosaic{
+      position:relative;
+      height:520px;
+      overflow:hidden;
+    }
+    .hero-mosaic-img{
+      position:absolute;inset:0;
+      background:url('../assets/images/background2.jpg') center/cover no-repeat;
+      opacity:0.8;
+    }
+    /* Grain / noise overlay */
+    .hero-mosaic::after{
+      content:'';position:absolute;inset:0;z-index:3;
+      pointer-events:none;opacity:0.35;mix-blend-mode:overlay;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size:200px 200px;
+    }
+    .hero-mosaic-grid{
+      position:absolute;inset:0;z-index:2;
+      display:grid;
+      grid-template-columns:1fr 1.6fr 1fr;
+      grid-template-rows:1fr 1fr;
+    }
+    .hero-mosaic-cell{
+      border:1px solid rgba(255,255,255,0.08);
+      position:relative;
+    }
+    .hero-mosaic-cell-label{
+      position:absolute;bottom:12px;left:12px;
+      font-size:0.58rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;
+      color:rgba(255,255,255,0.4);
+    }
+
+    /* ═══════════════════ HERO TEXT ═══════════════════ */
+    .hero-text{
+      position:relative;z-index:4;
+      margin-top:-120px;
+      margin-left:40px;margin-right:40px;
+      padding:4rem 4rem 3.5rem;
+      background:#1a1a1f;
+      border:1px solid rgba(255,255,255,0.06);
+    }
+    .hero-text h1{
+      font-size:clamp(2.5rem,5vw,4.2rem);
+      font-weight:700;line-height:1.08;letter-spacing:-0.03em;
+      color:#e4e4e7;margin-bottom:1.5rem;
+    }
+    .hero-text p{
+      font-size:clamp(0.95rem,1.2vw,1.15rem);
+      color:#71717a;line-height:1.7;max-width:640px;margin-bottom:2.5rem;
+    }
+    .hero-text p strong{color:#4ade80}
+    .hero-buttons{display:flex;gap:0.75rem}
+    .btn{
+      display:inline-flex;align-items:center;gap:0.5rem;
+      padding:0.7rem 1.6rem;border:1px solid #3f3f46;border-radius:4px;
+      font-size:0.85rem;font-weight:600;color:#e4e4e7;
+      background:transparent;cursor:pointer;transition:all 0.2s;
+    }
+    .btn:hover{border-color:#71717a;background:rgba(255,255,255,0.03)}
+    .btn.primary{background:#e4e4e7;color:#1a1a1f;border-color:#e4e4e7}
+    .btn.primary:hover{background:#fff}
+
+    /* ═══════════════════ STATS BAR ═══════════════════ */
+    .stats-bar{
+      display:grid;grid-template-columns:repeat(3,1fr);
+      border-bottom:1px solid rgba(255,255,255,0.06);
+    }
+    .stat-item{
+      padding:2rem 0;
+      border-right:1px solid rgba(255,255,255,0.06);
+      text-align:center;
+    }
+    .stat-item:last-child{border-right:none}
+    .stat-value{font-size:2rem;font-weight:800;color:#e4e4e7;letter-spacing:-0.03em}
+    .stat-value.green{color:#4ade80}
+    .stat-value.red{color:#f87171}
+    .stat-label{font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:#52525b;margin-top:0.3rem}
+
+    /* ═══════════════════ TWO-COL SECTION ═══════════════════ */
+    .two-col{
+      display:grid;grid-template-columns:1fr 1fr;
+      border-bottom:1px solid rgba(255,255,255,0.06);
+    }
+    .two-col-panel{
+      padding:4rem 3rem;
+      border-right:1px solid rgba(255,255,255,0.06);
+    }
+    .two-col-panel:last-child{border-right:none}
+    .panel-tag{
+      display:inline-block;
+      padding:0.25rem 0.65rem;border:1px solid #3f3f46;border-radius:3px;
+      font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;
+      color:#a1a1aa;margin-bottom:1.25rem;
+    }
+    .panel-title{
+      font-size:1.6rem;font-weight:700;color:#e4e4e7;letter-spacing:-0.02em;
+      margin-bottom:0.75rem;display:flex;align-items:center;gap:0.5rem;
+    }
+    .panel-title .arrow{color:#71717a;font-size:1.2rem}
+    .panel-desc{font-size:0.88rem;color:#71717a;line-height:1.65;margin-bottom:2rem}
+    .panel-sub{font-size:0.7rem;font-weight:600;color:#52525b;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:1rem}
+    .panel-link{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:1rem 1.25rem;
+      border:1px solid rgba(255,255,255,0.06);border-radius:6px;
+      margin-bottom:0.5rem;
+      transition:all 0.2s;cursor:pointer;
+    }
+    .panel-link:hover{border-color:#3f3f46;background:rgba(255,255,255,0.02)}
+    .panel-link-main{display:flex;flex-direction:column;gap:0.2rem}
+    .panel-link-title{font-size:0.9rem;font-weight:600;color:#e4e4e7}
+    .panel-link-desc{font-size:0.78rem;color:#52525b}
+    .panel-link-arrow{color:#52525b;font-size:1rem}
+
+    /* ═══════════════════ ISOMETRIC ARCHITECTURE ═══════════════════ */
+    .arch-section{
+      padding:5rem 0;
+      border-bottom:1px solid rgba(255,255,255,0.06);
+      overflow:hidden;
+    }
+    .arch-wrapper{
+      display:flex;align-items:center;gap:4rem;
+    }
+    .arch-info{flex:1;max-width:380px}
+    .arch-info .section-tag{margin-bottom:0.75rem}
+    .arch-info h2{font-size:1.8rem;font-weight:700;color:#e4e4e7;letter-spacing:-0.03em;margin-bottom:1rem}
+    .arch-info p{font-size:0.88rem;color:#71717a;line-height:1.65}
+
+    /* Isometric plane */
+    .arch-plane-wrap{
+      flex:1;display:flex;justify-content:center;align-items:center;
+      min-height:420px;
+      perspective:900px;
+    }
+    .arch-plane{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      grid-template-rows:1fr 1fr;
+      gap:3px;
+      width:360px;height:360px;
+      transform:rotateX(55deg) rotateZ(-45deg);
+      transform-style:preserve-3d;
+    }
+    .arch-node{
+      border:1px solid rgba(255,255,255,0.1);
+      background:rgba(26,26,31,0.8);
+      padding:1.5rem 1.2rem;
+      display:flex;flex-direction:column;justify-content:space-between;
+      transition:border-color 0.3s,background 0.3s;
+      position:relative;
+    }
+    .arch-node:hover{
+      border-color:rgba(255,255,255,0.2);
+      background:rgba(255,255,255,0.03);
+    }
+    .arch-node-step{
+      font-size:0.55rem;font-weight:700;letter-spacing:0.12em;
+      color:#52525b;text-transform:uppercase;
+    }
+    .arch-node-title{
+      font-size:0.72rem;font-weight:700;color:#e4e4e7;
+      letter-spacing:0.04em;text-transform:uppercase;
+      margin-top:auto;
+    }
+    .arch-node-val{
+      font-size:0.6rem;font-weight:600;color:#52525b;margin-top:0.35rem;
+    }
+    /* Arrow indicators between nodes */
+    .arch-node::after{
+      content:'';position:absolute;
+      width:12px;height:1px;background:rgba(255,255,255,0.12);
+    }
+    .arch-node.n1::after{right:-8px;top:50%}
+    .arch-node.n2::after{bottom:-8px;left:50%;width:1px;height:12px}
+    .arch-node.n3::after{right:-8px;top:50%}
+
+    /* Floating flat labels outside the plane */
+    .arch-float-labels{
+      position:absolute;inset:0;pointer-events:none;
+    }
+    .arch-float{
+      position:absolute;
+      font-size:0.6rem;font-weight:600;letter-spacing:0.1em;
+      text-transform:uppercase;color:#3f3f46;
+    }
+
+    /* ═══════════════════ TYPEWRITER TEXT ═══════════════════ */
+    .typewriter-section{
+      padding:5rem 0;
+      border-bottom:1px solid rgba(255,255,255,0.06);
+    }
+    .typewriter-text{
+      font-size:clamp(1.3rem,2.5vw,2rem);
+      font-weight:400;line-height:1.55;
+      color:#a1a1aa;max-width:800px;
+      min-height:10rem;
+    }
+    .typewriter-cursor{
+      display:inline-block;width:8px;height:1.1em;vertical-align:middle;
+      background:rgba(161,161,170,0.5);margin-left:2px;
+      animation:blink 1s ease-out infinite;
+    }
+    @keyframes blink{0%,50%{opacity:1}100%{opacity:0}}
+
+    /* ═══════════════════ CHARTS SECTION ═══════════════════ */
+    .charts-section{
+      padding:5rem 0;
+      border-bottom:1px solid rgba(255,255,255,0.06);
+    }
+    .section-header{margin-bottom:3rem}
+    .section-tag{
+      font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;
+      color:#52525b;margin-bottom:0.75rem;
+    }
+    .section-title{
+      font-size:clamp(1.8rem,3vw,2.5rem);
+      font-weight:700;letter-spacing:-0.03em;color:#e4e4e7;
+    }
+    .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+    .chart-card{
+      padding:2rem;
+      border:1px solid rgba(255,255,255,0.06);border-radius:8px;
+      background:rgba(255,255,255,0.015);
+    }
+    .chart-card.energy{border-color:rgba(74,222,128,0.12)}
+    .chart-label{font-size:0.68rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:#52525b;margin-bottom:0.4rem}
+    .chart-title{font-size:1.1rem;font-weight:700;color:#e4e4e7;margin-bottom:1.5rem;letter-spacing:-0.01em}
+    .chart-wrap{position:relative;height:260px}
+
+    /* ═══════════════════ PIPELINE CARDS ═══════════════════ */
+    .pipeline-section{
+      padding:5rem 0;
+      border-bottom:1px solid rgba(255,255,255,0.06);
+    }
+    .pipeline-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+    .pipeline-card{
+      padding:2rem 1.5rem;
+      border:1px solid rgba(255,255,255,0.06);
+      border-right:none;
+      transition:background 0.2s;
+    }
+    .pipeline-card:last-child{border-right:1px solid rgba(255,255,255,0.06)}
+    .pipeline-card:hover{background:rgba(255,255,255,0.02)}
+    .pipeline-step-num{
+      font-size:0.7rem;font-weight:700;color:#52525b;
+      margin-bottom:1rem;letter-spacing:0.08em;
+    }
+    .pipeline-card h3{font-size:0.95rem;font-weight:700;color:#e4e4e7;margin-bottom:0.5rem;letter-spacing:-0.01em}
+    .pipeline-card p{font-size:0.8rem;color:#71717a;line-height:1.55}
+
+    /* ═══════════════════ TECH STACK ═══════════════════ */
+    .tech-section{
+      padding:5rem 0;
+      border-bottom:1px solid rgba(255,255,255,0.06);
+    }
+    .tech-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+    .tech-card{
+      padding:2rem;text-align:center;
+      border:1px solid rgba(255,255,255,0.06);
+      border-right:none;
+      transition:background 0.2s;
+    }
+    .tech-card:last-child{border-right:1px solid rgba(255,255,255,0.06)}
+    .tech-card:hover{background:rgba(255,255,255,0.02)}
+    .tech-logo{
+      width:48px;height:48px;margin:0 auto 1rem;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .tech-logo img{max-width:100%;max-height:100%;filter:grayscale(100%) brightness(1.8);transition:filter 0.3s}
+    .tech-card:hover .tech-logo img{filter:grayscale(0%) brightness(1)}
+    .tech-name{font-size:0.85rem;font-weight:700;color:#e4e4e7;margin-bottom:0.2rem}
+    .tech-desc{font-size:0.7rem;color:#52525b}
+
+    /* ═══════════════════ FOOTER ═══════════════════ */
+    .footer{padding:5rem 0 3rem;border-top:1px solid rgba(255,255,255,0.06)}
+    .footer-top{display:flex;align-items:center;gap:0.6rem;margin-bottom:3rem}
+    .footer-brand-icon{
+      width:30px;height:30px;border:1.5px solid #52525b;border-radius:5px;
+      display:flex;align-items:center;justify-content:center;
+      font-weight:800;font-size:13px;color:#a1a1aa;
+    }
+    .footer-brand-text{font-weight:700;font-size:1.1rem;color:#a1a1aa}
+    .footer-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:2rem;margin-bottom:3rem}
+    .footer-col-title{font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:#52525b;margin-bottom:1rem}
+    .footer-col a{display:block;font-size:0.85rem;color:#71717a;margin-bottom:0.6rem;transition:color 0.2s}
+    .footer-col a:hover{color:#e4e4e7}
+    .footer-bottom{border-top:1px solid rgba(255,255,255,0.06);padding-top:2rem;font-size:0.75rem;color:#3f3f46}
+
+    /* ═══════════════════ SCROLL REVEAL ═══════════════════ */
+    .reveal{opacity:0;transform:translateY(30px);transition:opacity 0.7s cubic-bezier(0.16,1,0.3,1),transform 0.7s cubic-bezier(0.16,1,0.3,1)}
+    .reveal.visible{opacity:1;transform:translateY(0)}
+    .reveal-d1{transition-delay:0.1s}
+    .reveal-d2{transition-delay:0.2s}
+    .reveal-d3{transition-delay:0.3s}
+    .reveal-d4{transition-delay:0.4s}
+
+    /* ═══════════════════ RESPONSIVE ═══════════════════ */
+    @media(max-width:768px){
+      .hero-mosaic{height:320px}
+      .hero-mosaic-grid{grid-template-columns:1fr 1fr}
+      .hero-text{margin-left:16px;margin-right:16px;margin-top:-80px;padding:2.5rem 2rem}
+      .two-col{grid-template-columns:1fr}
+      .two-col-panel{border-right:none;border-bottom:1px solid rgba(255,255,255,0.06)}
+      .charts-grid{grid-template-columns:1fr}
+      .pipeline-grid{grid-template-columns:1fr}
+      .pipeline-card{border-right:1px solid rgba(255,255,255,0.06);border-bottom:none}
+      .tech-grid{grid-template-columns:repeat(2,1fr)}
+      .tech-card{border-right:1px solid rgba(255,255,255,0.06)}
+      .footer-grid{grid-template-columns:repeat(2,1fr)}
+      .stats-bar{grid-template-columns:1fr}
+      .stat-item{border-right:none;border-bottom:1px solid rgba(255,255,255,0.06)}
+      .nav-center,.nav-right{display:none}
+      .iso-diagram{width:320px;height:320px}
+      .iso-ring.r1{width:280px;height:280px}
+      .iso-ring.r2{width:210px;height:210px}
+      .iso-ring.r3{width:140px;height:140px}
+      .iso-ring.r4{width:70px;height:70px}
+      .container{padding:0 1.5rem}
+    }
+  </style>
 </head>
-<body class="bg-slate-900 text-slate-200 p-10 font-sans">
-    <div class="max-w-5xl mx-auto">
-        <h1 class="text-4xl font-bold mb-2 text-green-400">Petal Optimization Report</h1>
-        <p class="text-slate-400 mb-8">Target: <code class="bg-slate-800 px-2 py-1 rounded">target_naive.c</code></p>
+<body>
 
-        <div class="grid grid-cols-2 gap-8">
-            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
-                <h2 class="text-xl font-semibold mb-4 text-center">Execution Time (Seconds)</h2>
-                <canvas id="timeChart"></canvas>
-            </div>
-            <div class="bg-slate-800 p-6 rounded-xl border border-green-900 shadow-[0_0_15px_rgba(74,222,128,0.1)]">
-                <h2 class="text-xl font-semibold mb-4 text-center">Energy Consumed (Joules)</h2>
-                <canvas id="energyChart"></canvas>
-            </div>
-        </div>
+<!-- ═══════ NAVBAR ═══════ -->
+<nav class="navbar" id="navbar">
+  <div class="navbar-inner">
+    <div class="nav-left">
+      <a class="nav-brand" href="#">
+        <div class="nav-brand-icon">P</div>
+        <span class="nav-brand-text">Petal</span>
+      </a>
+      <div class="nav-center">
+        <a href="#pipeline-sec">Pipeline</a>
+        <a href="#charts-sec">Metrics</a>
+        <a href="#iso-sec">Architecture</a>
+        <a href="#tech-sec">Stack</a>
+      </div>
     </div>
+    <div class="nav-right">
+      <button class="nav-btn">Docs</button>
+      <button class="nav-btn filled">Report</button>
+    </div>
+  </div>
+</nav>
 
-    <script>
-        // Execution Time Chart (Shows minimal difference)
-        new Chart(document.getElementById('timeChart'), {
-            type: 'bar',
-            data: { labels: ['Baseline (-O3)', 'Petal Optimized'], datasets: [{ data: [1.25, 1.18], backgroundColor: ['#64748b', '#4ade80'] }] },
-            options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#334155' } } } }
-        });
+<!-- ═══════ HERO IMAGE MOSAIC ═══════ -->
+<section class="hero-mosaic">
+  <div class="hero-mosaic-img"></div>
+  <div class="hero-mosaic-grid">
+    <div class="hero-mosaic-cell">
+      <span class="hero-mosaic-cell-label">LLVM IR</span>
+    </div>
+    <div class="hero-mosaic-cell">
+      <span class="hero-mosaic-cell-label">Energy Profiling</span>
+    </div>
+    <div class="hero-mosaic-cell">
+      <span class="hero-mosaic-cell-label">AMD uProf</span>
+    </div>
+    <div class="hero-mosaic-cell">
+      <span class="hero-mosaic-cell-label">Cache Analysis</span>
+    </div>
+    <div class="hero-mosaic-cell">
+      <span class="hero-mosaic-cell-label">XGBoost NPU</span>
+    </div>
+    <div class="hero-mosaic-cell">
+      <span class="hero-mosaic-cell-label">Loop Tiling</span>
+    </div>
+  </div>
+</section>
 
-        // Energy Chart (Shows massive difference)
-        new Chart(document.getElementById('energyChart'), {
-            type: 'bar',
-            data: { labels: ['Baseline (-O3)', 'Petal Optimized'], datasets: [{ data: [56.4, 34.2], backgroundColor: ['#ef4444', '#4ade80'] }] },
-            options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#334155' } } } }
-        });
-    </script>
+<!-- ═══════ HERO TEXT ═══════ -->
+<section class="hero-text">
+  <div class="container">
+    <h1 class="reveal">Energy-Aware<br>Compilation</h1>
+    <p class="reveal reveal-d1">We're solving the compiler's energy blind spot. Petal profiled
+      <code style="background:rgba(255,255,255,0.06);padding:2px 8px;border-radius:3px;font-size:0.9em;color:#a1a1aa">target_naive.c</code>
+      against AMD hardware telemetry and reduced energy consumption by
+      <strong>39.4%</strong> with zero performance regression.</p>
+    <div class="hero-buttons reveal reveal-d2">
+      <button class="btn primary">View Metrics</button>
+      <button class="btn">View Source</button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ STATS BAR ═══════ -->
+<div class="stats-bar">
+  <div class="stat-item reveal">
+    <div class="stat-value red">56.4 J</div>
+    <div class="stat-label">Baseline Energy</div>
+  </div>
+  <div class="stat-item reveal reveal-d1">
+    <div class="stat-value green">34.2 J</div>
+    <div class="stat-label">Petal Energy</div>
+  </div>
+  <div class="stat-item reveal reveal-d2">
+    <div class="stat-value">1.18 s</div>
+    <div class="stat-label">Execution Time</div>
+  </div>
+</div>
+
+<!-- ═══════ TWO-COL: BUILD / DISCOVER ═══════ -->
+<section class="two-col">
+  <div class="two-col-panel reveal">
+    <span class="panel-tag">Build</span>
+    <div class="panel-title">Petal Compiler <span class="arrow">&#10148;</span></div>
+    <p class="panel-desc">Give your binaries the ability to sense and adapt to physical power draw, so they behave more like hardware and less like blind software.</p>
+    <div class="panel-sub">Explore our pipeline</div>
+    <div class="panel-link">
+      <div class="panel-link-main">
+        <span class="panel-link-title">LLVM Green Pass</span>
+        <span class="panel-link-desc">Custom energy-aware IR transformation</span>
+      </div>
+      <span class="panel-link-arrow">&#10148;</span>
+    </div>
+    <div class="panel-link">
+      <div class="panel-link-main">
+        <span class="panel-link-title">AMD uProf Integration</span>
+        <span class="panel-link-desc">Hardware-in-the-loop telemetry profiling</span>
+      </div>
+      <span class="panel-link-arrow">&#10148;</span>
+    </div>
+  </div>
+  <div class="two-col-panel reveal reveal-d2">
+    <span class="panel-tag">Discover</span>
+    <div class="panel-title">Analysis Results <span class="arrow">&#10148;</span></div>
+    <p class="panel-desc">We are building compilation infrastructure that treats the Joule as a first-class metric, alongside speed and binary size.</p>
+    <div class="panel-sub">Key findings</div>
+    <div class="panel-link">
+      <div class="panel-link-main">
+        <span class="panel-link-title">Cache Thrashing at line 11</span>
+      </div>
+      <span class="panel-link-arrow">&#10148;</span>
+    </div>
+    <div class="panel-link">
+      <div class="panel-link-main">
+        <span class="panel-link-title">Loop Tiling: 38% Energy Savings</span>
+      </div>
+      <span class="panel-link-arrow">&#10148;</span>
+    </div>
+    <div class="panel-link">
+      <div class="panel-link-main">
+        <span class="panel-link-title">22.2 Joules Saved Per Execution</span>
+      </div>
+      <span class="panel-link-arrow">&#10148;</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ ISOMETRIC ARCHITECTURE ═══════ -->
+<section class="arch-section" id="iso-sec">
+  <div class="container">
+    <div class="arch-wrapper">
+      <div class="arch-info reveal">
+        <div class="section-tag">Architecture</div>
+        <h2>Closed-Loop Pipeline</h2>
+        <p>Petal's four-stage pipeline reads C source, profiles hardware telemetry, predicts energy hotspots via ML, and rewrites LLVM IR — all before the final binary is emitted.</p>
+      </div>
+      <div class="arch-plane-wrap reveal reveal-d2">
+        <div class="arch-plane">
+          <div class="arch-node n1">
+            <span class="arch-node-step">01 — Input</span>
+            <div class="arch-node-title">LLVM Frontend</div>
+            <div class="arch-node-val">ClangIR from target_naive.c</div>
+          </div>
+          <div class="arch-node n2">
+            <span class="arch-node-step">02 — Profile</span>
+            <div class="arch-node-title">AMD uProf</div>
+            <div class="arch-node-val">PPT: 45.2W • Cache Miss: 87%</div>
+          </div>
+          <div class="arch-node n3">
+            <span class="arch-node-step">03 — Predict</span>
+            <div class="arch-node-title">XGBoost NPU</div>
+            <div class="arch-node-val">Pred: -38% Energy • 0.92 F1</div>
+          </div>
+          <div class="arch-node n4">
+            <span class="arch-node-step">04 — Output</span>
+            <div class="arch-node-title">Green Pass</div>
+            <div class="arch-node-val">Loop Tiled • 34.2J • 1.18s</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ TYPEWRITER SECTION ═══════ -->
+<section class="typewriter-section">
+  <div class="container">
+    <p class="typewriter-text" id="typewriterTarget" data-text="Modern compilers optimize for speed and size but are blind to the physical energy consumed by the silicon. Petal closes this loop — profiling real hardware telemetry, predicting energy costs via ML, and rewriting LLVM IR for maximum efficiency."><span class="typewriter-cursor"></span></p>
+  </div>
+</section>
+
+<!-- ═══════ PIPELINE ═══════ -->
+<section class="pipeline-section" id="pipeline-sec">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-tag">Pipeline</div>
+      <h2 class="section-title">What Petal Did</h2>
+    </div>
+    <div class="pipeline-grid">
+      <div class="pipeline-card reveal">
+        <div class="pipeline-step-num">01</div>
+        <h3>IR Generation</h3>
+        <p>Initialized LLVM 22.0 frontend and generated ClangIR from the target C source file.</p>
+      </div>
+      <div class="pipeline-card reveal reveal-d1">
+        <div class="pipeline-step-num">02</div>
+        <h3>Hardware Telemetry</h3>
+        <p>Profiled against AMD uProf metrics. Baseline PPT: 45.2W. Thermal spikes from cache thrashing.</p>
+      </div>
+      <div class="pipeline-card reveal reveal-d2">
+        <div class="pipeline-step-num">03</div>
+        <h3>ML Prediction</h3>
+        <p>Offloaded to Ryzen AI NPU. XGBoost identified inefficient loop nesting, predicting 38% savings.</p>
+      </div>
+      <div class="pipeline-card reveal reveal-d3">
+        <div class="pipeline-step-num">04</div>
+        <h3>IR Rewrite</h3>
+        <p>Applied PetalEnergyOptimizationPass — swapped naive O(N³) loop with blocked, cache-friendly iteration.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ CHARTS ═══════ -->
+<section class="charts-section" id="charts-sec">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-tag">Metrics</div>
+      <h2 class="section-title">Side-by-Side Analysis</h2>
+    </div>
+    <div class="charts-grid">
+      <div class="chart-card reveal">
+        <div class="chart-label">Performance</div>
+        <div class="chart-title">Execution Time (Seconds)</div>
+        <div class="chart-wrap"><canvas id="timeChart"></canvas></div>
+      </div>
+      <div class="chart-card energy reveal reveal-d1">
+        <div class="chart-label">Energy Efficiency</div>
+        <div class="chart-title">Energy Consumed (Joules)</div>
+        <div class="chart-wrap"><canvas id="energyChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ TECH STACK ═══════ -->
+<section class="tech-section" id="tech-sec">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-tag">Technology</div>
+      <h2 class="section-title">Built With</h2>
+    </div>
+    <div class="tech-grid">
+      <div class="tech-card reveal">
+        <div class="tech-logo"><img src="https://llvm.org/img/LLVMWyvernSmall.png" alt="LLVM" /></div>
+        <div class="tech-name">LLVM 22+</div>
+        <div class="tech-desc">Compiler Infrastructure</div>
+      </div>
+      <div class="tech-card reveal reveal-d1">
+        <div class="tech-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/6/69/XGBoost_logo.png" alt="XGBoost" /></div>
+        <div class="tech-name">XGBoost</div>
+        <div class="tech-desc">ML Prediction Engine</div>
+      </div>
+      <div class="tech-card reveal reveal-d2">
+        <div class="tech-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/7/7c/AMD_Logo.svg" alt="AMD" /></div>
+        <div class="tech-name">AMD uProf</div>
+        <div class="tech-desc">Hardware Telemetry</div>
+      </div>
+      <div class="tech-card reveal reveal-d3">
+        <div class="tech-logo"><img src="https://www.chartjs.org/img/chartjs-logo.svg" alt="Chart.js" /></div>
+        <div class="tech-name">Chart.js</div>
+        <div class="tech-desc">Data Visualization</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ FOOTER ═══════ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-top">
+      <div class="footer-brand-icon">P</div>
+      <span class="footer-brand-text">Petal</span>
+    </div>
+    <div class="footer-grid">
+      <div class="footer-col">
+        <div class="footer-col-title">Product</div>
+        <a href="#">LLVM Green Pass</a>
+        <a href="#">Energy Remarks</a>
+        <a href="#">ESG Dashboard</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Developers</div>
+        <a href="https://github.com/Dilraj07/Petal-" target="_blank">GitHub</a>
+        <a href="#">Documentation</a>
+        <a href="#">API Reference</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Company</div>
+        <a href="#">About Petal</a>
+        <a href="#">Research</a>
+        <a href="#">Contact</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Stack</div>
+        <a href="#">LLVM 22+</a>
+        <a href="#">XGBoost</a>
+        <a href="#">AMD uProf</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      &copy; 2026 Petal — Energy-Aware Compilation for a Greener Future
+    </div>
+  </div>
+</footer>
+
+<!-- ═══════ JAVASCRIPT ═══════ -->
+<script>
+(() => {
+  'use strict';
+
+  // ── Scroll reveal ──
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+  }, { threshold: 0.12, rootMargin: '0px 0px -30px 0px' });
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+
+  // ── Scroll-triggered typewriter ──
+  const twEl = document.getElementById('typewriterTarget');
+  const twText = twEl.getAttribute('data-text');
+  let twStarted = false;
+  const twObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting && !twStarted) {
+        twStarted = true;
+        twObs.unobserve(twEl);
+        let idx = 0;
+        const cursor = twEl.querySelector('.typewriter-cursor');
+        const interval = setInterval(() => {
+          if (idx < twText.length) {
+            twEl.insertBefore(document.createTextNode(twText[idx]), cursor);
+            idx++;
+          } else {
+            clearInterval(interval);
+          }
+        }, 18);
+      }
+    });
+  }, { threshold: 0.25 });
+  twObs.observe(twEl);
+
+  // ── Navbar scroll ──
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 60);
+  }, { passive: true });
+
+  // ── Charts ──
+  Chart.defaults.color = '#52525b';
+  Chart.defaults.font.family = "'Circular Std','Plus Jakarta Sans',sans-serif";
+  Chart.defaults.font.weight = 500;
+
+  const opts = (max) => ({
+    responsive: true, maintainAspectRatio: false,
+    animation: { duration: 1000, easing: 'easeOutQuart' },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: 'rgba(26,26,31,0.95)', borderColor: 'rgba(255,255,255,0.08)',
+        borderWidth: 1, padding: 12, cornerRadius: 6, displayColors: false,
+        titleFont: { weight: 600 },
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true, max,
+        grid: { color: 'rgba(255,255,255,0.03)', drawBorder: false },
+        ticks: { padding: 8, font: { size: 11 } },
+        border: { display: false }
+      },
+      x: {
+        grid: { display: false },
+        ticks: { padding: 8, font: { size: 11, weight: 600 } },
+        border: { display: false }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('timeChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Baseline (-O3)', 'Petal Optimized'],
+      datasets: [{
+        data: [1.25, 1.18],
+        backgroundColor: ['rgba(113,113,122,0.4)', 'rgba(74,222,128,0.4)'],
+        borderColor: ['#71717a', '#4ade80'],
+        borderWidth: 1, borderRadius: 4, borderSkipped: false, barPercentage: 0.5,
+      }]
+    },
+    options: opts(2)
+  });
+
+  new Chart(document.getElementById('energyChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Baseline (-O3)', 'Petal Optimized'],
+      datasets: [{
+        data: [56.4, 34.2],
+        backgroundColor: ['rgba(248,113,113,0.4)', 'rgba(74,222,128,0.4)'],
+        borderColor: ['#f87171', '#4ade80'],
+        borderWidth: 1, borderRadius: 4, borderSkipped: false, barPercentage: 0.5,
+      }]
+    },
+    options: opts(70)
+  });
+})();
+</script>
 </body>
 </html>

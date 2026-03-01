@@ -19,7 +19,7 @@ def main():
         print(f"Error: {args.file} not found.")
         return
 
-    with open(args.file, "r", encoding="utf-8") as f:
+    with open(args.file, "r", encoding="utf-8", errors="replace") as f:
         source_code = f.read()
 
     if args.tdp:

@@ -30,8 +30,8 @@ def redis_pubsub_processor(logger, log_method, event_dict):
         try:
             msg = json.dumps(event_dict)
             redis_client.publish(channel, msg)
-        except Exception:
-            pass  # Fail silently if unserializable
+        except Exception as e:
+            logger.warning(f"Non-critical error during event serialization: {e}")
     return event_dict
 
 # Configure structlog globally

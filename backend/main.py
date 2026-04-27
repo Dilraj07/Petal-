@@ -81,8 +81,19 @@ def run_pipeline(file_path, optimize="speed", policy="balanced", collector="auto
         if os.name == 'nt' and not baseline_bin.lower().endswith(".exe"):
             baseline_bin += ".exe"
         try:
-            subprocess.run(["gcc", *policy_cfg.baseline_flags, file_path, "-o", baseline_bin], check=True)
+            subprocess.run(["gcc", *policy_cfg.baseline_flags, file_path, "-o", baseline_bin], check=True, timeout=120)
             logger.info("Compiled Baseline Binary", binary=baseline_bin)
+        except subprocess.TimeoutExpired:
+            logger.error("Baseline compilation timed out after 120 seconds")
+            raise RuntimeError("Baseline compilation timed out after 120 seconds.")
+        except subprocess.CalledProcessError as e:
+            error_msg = (
+                f"Compilation failed with exit code {e.returncode}.\n"
+                f"GCC Output:\n{e.stderr if e.stderr else 'No output captured.'}\n"
+                "Hint: Ensure GCC is installed and the source code is valid C."
+            )
+            logger.error(error_msg)
+            raise RuntimeError(error_msg) from None
         except Exception as e:
             logger.error("Error compiling baseline", error=str(e))
             raise RuntimeError(f"Error compiling baseline: {e}")
@@ -92,7 +103,7 @@ def run_pipeline(file_path, optimize="speed", policy="balanced", collector="auto
         apply_opt = decision["apply_transform"]
         
         if apply_opt:
-            optimized_code = apply_loop_tiling(source_code)
+            optimized_code = apply_loop_tiling(source_code, block_size=policy_cfg.block_size)
             
             root, ext = os.path.splitext(os.path.basename(file_path))
             opt_file = os.path.join(out_dir, f"{root}_optimized{ext or '.c'}")
@@ -103,8 +114,19 @@ def run_pipeline(file_path, optimize="speed", policy="balanced", collector="auto
             if os.name == 'nt' and not optimized_bin.lower().endswith(".exe"):
                 optimized_bin += ".exe"
             try:
-                subprocess.run(["gcc", *policy_cfg.optimized_flags, opt_file, "-o", optimized_bin], check=True)
+                subprocess.run(["gcc", *policy_cfg.optimized_flags, opt_file, "-o", optimized_bin], check=True, timeout=120)
                 logger.info("Compiled Optimized Binary", binary=optimized_bin)
+            except subprocess.TimeoutExpired:
+                logger.error("Optimized compilation timed out after 120 seconds")
+                raise RuntimeError("Optimized compilation timed out after 120 seconds.")
+            except subprocess.CalledProcessError as e:
+                error_msg = (
+                    f"Compilation failed with exit code {e.returncode}.\n"
+                    f"GCC Output:\n{e.stderr if e.stderr else 'No output captured.'}\n"
+                    "Hint: Ensure GCC is installed and the source code is valid C."
+                )
+                logger.error(error_msg)
+                raise RuntimeError(error_msg) from None
             except Exception as e:
                 logger.error("Error compiling optimized", error=str(e))
                 raise RuntimeError(f"Error compiling optimized: {e}")
@@ -251,7 +273,11 @@ def run_pipeline(file_path, optimize="speed", policy="balanced", collector="auto
     else:
         logger.info("Standard compilation...")
         out_bin = output_bin or "a.out"
-        subprocess.run(["gcc", file_path, "-o", out_bin], check=True)
+        try:
+            subprocess.run(["gcc", file_path, "-o", out_bin], check=True, timeout=120)
+        except subprocess.TimeoutExpired:
+            logger.error("Standard compilation timed out after 120 seconds")
+            raise RuntimeError("Compilation timed out after 120 seconds.")
         logger.info("Compiled", binary=out_bin)
         return {"status": "ok", "binary": out_bin}
 

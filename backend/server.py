@@ -128,4 +128,5 @@ if __name__ == '__main__':
     # Ensure test_workloads directory exists
     test_dir = os.path.join(BASE_DIR, "data", "test_workloads")
     os.makedirs(test_dir, exist_ok=True)
-    app.run(debug=True, port=5000)
+    debug_mode = os.getenv('PETAL_DEBUG', 'false').lower() == 'true'
+    app.run(debug=debug_mode, port=5000)

@@ -3,7 +3,8 @@ import structlog
 
 logger = structlog.get_logger("transformer")
 
-BLOCK_SIZE = 64
+# Default block size, can be overridden by parameter
+DEFAULT_BLOCK_SIZE = 64
 
 # Matches: int main() { — tolerates any whitespace before/after braces
 _MAIN_OPEN = re.compile(r'(int\s+main\s*\(\s*\)\s*\{)')
@@ -18,12 +19,12 @@ _NAIVE_LOOP = re.compile(
 )
 
 
-def _tiled_loops(body: str) -> str:
+def _tiled_loops(body: str, block_size: int) -> str:
     # Rewrite the inner body: replace i→ii, j→jj, k→kk
     tiled_body = re.sub(r'\bi\b', 'ii', body)
     tiled_body = re.sub(r'\bj\b', 'jj', tiled_body)
     tiled_body = re.sub(r'\bk\b', 'kk', tiled_body)
-    bs = BLOCK_SIZE
+    bs = block_size
     return (
         f"for(int i=0; i<N; i+={bs}){{\n"
         f"        for(int j=0; j<N; j+={bs}){{\n"
@@ -41,7 +42,7 @@ def _tiled_loops(body: str) -> str:
     )
 
 
-def apply_loop_tiling(source_code):
+def apply_loop_tiling(source_code, block_size: int = DEFAULT_BLOCK_SIZE):
     logger.info("Applying 'Loop Tiling' transformation pass...")
 
     # Step 1: inject blockSize declaration after int main() {
@@ -50,7 +51,7 @@ def apply_loop_tiling(source_code):
         return source_code
 
     result = _MAIN_OPEN.sub(
-        r'\1\n    int blockSize = ' + str(BLOCK_SIZE) + '; // Petal Injected Block Size',
+        r'\1\n    int blockSize = ' + str(block_size) + '; // Petal Injected Block Size',
         source_code,
         count=1,
     )
@@ -61,8 +62,8 @@ def apply_loop_tiling(source_code):
         logger.warning("Nested loop pattern not recognised — transformation skipped.", tip="ensure the source uses the canonical i/j/k loop variables.")
         return result
 
-    tiled = _tiled_loops(m.group('body'))
+    tiled = _tiled_loops(m.group('body'), block_size)
     result = result[:m.start()] + tiled + result[m.end():]
 
-    logger.info("Loop tiling applied", block_size=BLOCK_SIZE)
+    logger.info("Loop tiling applied", block_size=block_size)
     return result

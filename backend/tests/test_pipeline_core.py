@@ -36,11 +36,16 @@ class TestPipelineCore(unittest.TestCase):
         self.assertFalse(analyze_energy_hotspots(source))
 
     def test_transformer_applies_loop_tiling_markers(self):
-        optimized = apply_loop_tiling(NAIVE_SAMPLE)
+        optimized = apply_loop_tiling(NAIVE_SAMPLE, block_size=64)
         self.assertIn("int blockSize = 64", optimized)
         self.assertIn("for(int i=0; i<N; i+=64)", optimized)
         self.assertIn("for(int ii=i; ii<i+64; ii++)", optimized)
         self.assertIn("C[ii][jj] += A[ii][kk] * B[kk][jj];", optimized)
+
+    def test_transformer_with_custom_block_size(self):
+        optimized = apply_loop_tiling(NAIVE_SAMPLE, block_size=32)
+        self.assertIn("int blockSize = 32", optimized)
+        self.assertIn("for(int i=0; i<N; i+=32)", optimized)
 
 
 if __name__ == "__main__":

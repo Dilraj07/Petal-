@@ -129,8 +129,8 @@ def _run_pipeline(args: argparse.Namespace) -> dict:
 
     if apply_opt:
         if not args.json:
-            opt_items.append(checklist_item("Applying loop tiling (tile=64)"))
-        optimised_code = apply_loop_tiling(source_code)
+            opt_items.append(checklist_item(f"Applying loop tiling (tile={policy_cfg.block_size})"))
+        optimised_code = apply_loop_tiling(source_code, block_size=policy_cfg.block_size)
         
         if args.explain and not args.json:
             opt_items.append("")

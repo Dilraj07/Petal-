@@ -38,7 +38,7 @@ def supports_unicode() -> bool:
             sys.stdout.encoding.lower() in ('utf-8', 'utf8') or
             sys.platform == 'win32'  # Windows Terminal supports unicode
         )
-    except:
+    except Exception as e:
         return False
 
 

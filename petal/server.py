@@ -12,7 +12,8 @@ if _PROJECT_ROOT not in sys.path:
 
 def main() -> None:
     from backend.server import app
-    app.run(debug=True, port=5000)
+    debug_mode = os.getenv('PETAL_DEBUG', 'false').lower() == 'true'
+    app.run(debug=debug_mode, port=5000)
 
 
 if __name__ == "__main__":

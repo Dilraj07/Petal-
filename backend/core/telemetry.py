@@ -13,13 +13,15 @@ try:
     import pyRAPL
     pyRAPL.setup()
     HAS_RAPL = True
-except Exception:
+except Exception as e:
+    logger.warning(f"pyRAPL not available: {e}")
     HAS_RAPL = False
 
 try:
     from zeus_apple_silicon import AppleEnergyMonitor
     HAS_APPLE_IO = True
-except Exception:
+except Exception as e:
+    logger.warning(f"Apple Silicon IOReport not available: {e}")
     HAS_APPLE_IO = False
 
 # Assume a standard laptop CPU has a max TDP (Thermal Design Power) of 45 Watts
@@ -296,8 +298,8 @@ class AppleIoTelemetryCollector(BaseTelemetryCollector):
             if hasattr(m, 'cpu_joules'): total_joules += getattr(m, 'cpu_joules')
             if hasattr(m, 'gpu_joules'): total_joules += getattr(m, 'gpu_joules')
             if hasattr(m, 'dram_joules'): total_joules += getattr(m, 'dram_joules')
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Non-critical error during Apple energy aggregation: {e}")
 
         return {
             "runtime_s": wall_time,

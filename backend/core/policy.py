@@ -10,6 +10,8 @@ class PolicyConfig:
     min_hotspot_confidence: float
     optimized_flags: tuple[str, ...]
     baseline_flags: tuple[str, ...]
+    block_size: int = 64
+    tdp_watts: float = 45.0
     
     def __post_init__(self):
         """Validate policy configuration at instantiation time."""
@@ -29,18 +31,24 @@ POLICY_CONFIGS = {
         min_hotspot_confidence=0.6,
         optimized_flags=("-O2",),
         baseline_flags=("-O2",),
+        block_size=32,
+        tdp_watts=15.0,
     ),
     "balanced": PolicyConfig(
         name="balanced",
         min_hotspot_confidence=0.75,
         optimized_flags=("-O3",),
         baseline_flags=("-O3",),
+        block_size=64,
+        tdp_watts=45.0,
     ),
     "perf": PolicyConfig(
         name="perf",
         min_hotspot_confidence=0.85,
         optimized_flags=("-O3", "-march=native", "-funroll-loops"),
         baseline_flags=("-O3",),
+        block_size=128,
+        tdp_watts=65.0,
     ),
 }
 

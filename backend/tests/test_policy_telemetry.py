@@ -27,7 +27,7 @@ class TestPolicyAndTelemetry(unittest.TestCase):
     def test_unknown_collector_falls_back_to_synthetic(self):
         collector, requested = resolve_collector("unknown")
         self.assertEqual(requested, "unknown")
-        self.assertEqual(collector.name, "synthetic_cpu_load")
+        self.assertEqual(collector.name, "synthetic")
 
     def test_profile_binary_returns_expected_schema(self):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -37,18 +37,19 @@ class TestPolicyAndTelemetry(unittest.TestCase):
                 f.write("exit 0\n")
             os.chmod(script_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
             metrics = profile_binary(script_path, collector_name="synthetic")
-            for key in (
-                "collector",
-                "confidence_tier",
-                "execution_time_s",
-                "avg_cpu_load_pct",
-                "avg_power_w",
-                "energy_j",
-                "sample_count",
-                "requested_collector",
-                "fallback_used",
-            ):
+            # Top-level keys
+            for key in ("runtime_s", "energy_j", "stdout", "stderr", "exit_code",
+                        "collector", "measurement"):
                 self.assertIn(key, metrics)
+            # Nested collector sub-keys
+            for key in ("requested", "used", "fallback_used", "confidence", "note"):
+                self.assertIn(key, metrics["collector"])
+            # Nested measurement sub-keys
+            for key in ("energy_domain", "unit", "is_estimate"):
+                self.assertIn(key, metrics["measurement"])
+            # Confirm fallback is correctly identified
+            self.assertEqual(metrics["collector"]["used"], "synthetic")
+            self.assertFalse(metrics["collector"]["fallback_used"])
 
 
 if __name__ == "__main__":

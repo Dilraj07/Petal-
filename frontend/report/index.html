@@ -1679,12 +1679,7 @@
   <section class="hero-text">
     <div class="container">
       <h1 class="reveal">Energy-Aware<br>Compilation</h1>
-      <p class="reveal reveal-d1">We're solving the compiler's energy blind spot. Petal profiled
-        <code
-          style="background:rgba(255,255,255,0.06);padding:2px 8px;border-radius:3px;font-size:0.9em;color:#a1a1aa">target_naive.c</code>
-        against AMD hardware telemetry and reduced energy consumption by
-        <strong>39.4%</strong> with zero performance regression.
-      </p>
+      <p class="reveal reveal-d1" id="heroDesc">We're solving the compiler's energy blind spot. Enter your C code below and run the benchmark to see the energy profile and optimization results.</p>
       <div class="hero-buttons reveal reveal-d2">
         <button class="btn primary">View Metrics</button>
         <button class="btn">View Source</button>
@@ -1695,15 +1690,15 @@
   <!-- ═══════ STATS BAR ═══════ -->
   <div class="stats-bar">
     <div class="stat-item reveal">
-      <div class="stat-value red">56.4 J</div>
+      <div class="stat-value red" id="heroBaseEnergy">-- J</div>
       <div class="stat-label">Baseline Energy</div>
     </div>
     <div class="stat-item reveal reveal-d1">
-      <div class="stat-value green">34.2 J</div>
+      <div class="stat-value green" id="heroPetalEnergy">-- J</div>
       <div class="stat-label">Petal Energy</div>
     </div>
     <div class="stat-item reveal reveal-d2">
-      <div class="stat-value">1.18 s</div>
+      <div class="stat-value" id="heroTime">-- s</div>
       <div class="stat-label">Execution Time</div>
     </div>
   </div>
@@ -1923,13 +1918,22 @@
               --optimize=energy<span class="demo-term-cursor" id="termCursor"></span></div>
           </div>
           <div class="demo-report-body" id="reportBody">
+            <div id="correctnessBanner" style="display:none; padding: 1rem; background: rgba(248,113,113,0.1); border: 1px solid #f87171; border-radius: 6px; color: #f87171; margin-bottom: 1rem; font-size: 0.8rem; font-weight: 600;">
+              Correctness mismatch detected: outputs differ. Energy savings may not be meaningful.
+            </div>
+            
+            <div id="telemetryCard" style="display:none; padding: 1rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; margin-bottom: 1rem; font-size: 0.75rem;">
+               <div id="telemetryDetails" style="color: #e4e4e7;"></div>
+               <div id="telemetryEstBadge" style="display:none; margin-top: 0.5rem; padding: 0.2rem 0.5rem; background: rgba(251,191,36,0.1); color: #fbbf24; border: 1px solid #fbbf24; border-radius: 4px; font-size: 0.65rem;" title="Energy numbers are derived from a CPU-time model, not from a hardware Joule counter. Relative trends may still be meaningful.">Estimated telemetry (not hardware counter)</div>
+            </div>
+
             <div class="demo-report-title">Petal Optimization Report</div>
             <div class="demo-report-grid">
               <div class="demo-report-card">
                 <h4>Execution Time (s)</h4>
                 <canvas id="demoChartTime" height="150"></canvas>
                 <div class="demo-report-stat">
-                  <span class="demo-report-big green">1.18s</span>
+                  <span class="demo-report-big green" id="reportTimePetal">--s</span>
                   <span class="demo-report-label">Petal Optimized</span>
                 </div>
               </div>
@@ -1937,10 +1941,28 @@
                 <h4>Energy Consumed (J)</h4>
                 <canvas id="demoChartEnergy" height="150"></canvas>
                 <div class="demo-report-stat">
-                  <span class="demo-report-big green">34.2J</span>
-                  <span class="demo-report-label">-39.4% vs Baseline</span>
+                  <span class="demo-report-big green" id="reportEnergyPetal">--J</span>
+                  <span class="demo-report-label" id="reportEnergyPct">--% vs Baseline</span>
                 </div>
               </div>
+            </div>
+            
+            <div style="margin-top: 2rem;">
+               <div class="demo-report-title">Live Runs Table</div>
+               <div style="max-height: 180px; overflow-y: auto;">
+                   <table id="runsTable" style="width:100%; border-collapse: collapse; font-size: 0.75rem; text-align: left;">
+                      <thead style="position: sticky; top: 0; background: #111114;">
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: #71717a;">
+                          <th style="padding: 0.5rem;">Variant</th>
+                          <th style="padding: 0.5rem;">Run</th>
+                          <th style="padding: 0.5rem;">Runtime (s)</th>
+                          <th style="padding: 0.5rem;">Energy (J)</th>
+                        </tr>
+                      </thead>
+                      <tbody id="runsTableBody">
+                      </tbody>
+                   </table>
+               </div>
             </div>
           </div>
         </div>
@@ -2195,10 +2217,12 @@
       tabReport.addEventListener('click', () => showTab('report'));
 
       // Render mini charts
-      let demoChartsRendered = false;
+      let demoChartTimeInstance = null;
+      let demoChartEnergyInstance = null;
+      window.chartDataTime = [0, 0];
+      window.chartDataEnergy = [0, 0];
+
       const renderDemoCharts = () => {
-        if (demoChartsRendered) return;
-        demoChartsRendered = true;
         const miniOpts = {
           responsive: true,
           plugins: { legend: { display: false } },
@@ -2207,19 +2231,23 @@
             y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#52525b', font: { size: 10 } }, beginAtZero: true }
           }
         };
-        new Chart(document.getElementById('demoChartTime'), {
+        
+        if (demoChartTimeInstance) demoChartTimeInstance.destroy();
+        demoChartTimeInstance = new Chart(document.getElementById('demoChartTime'), {
           type: 'bar',
           data: {
-            labels: ['Baseline -O3', 'Petal'],
-            datasets: [{ data: [1.25, 1.18], backgroundColor: ['#f87171', '#4ade80'], borderRadius: 4, barThickness: 32 }]
+            labels: ['Baseline -O2', 'Petal'],
+            datasets: [{ data: window.chartDataTime, backgroundColor: ['#f87171', '#4ade80'], borderRadius: 4, barThickness: 32 }]
           },
           options: miniOpts
         });
-        new Chart(document.getElementById('demoChartEnergy'), {
+        
+        if (demoChartEnergyInstance) demoChartEnergyInstance.destroy();
+        demoChartEnergyInstance = new Chart(document.getElementById('demoChartEnergy'), {
           type: 'bar',
           data: {
-            labels: ['Baseline -O3', 'Petal'],
-            datasets: [{ data: [56.4, 34.2], backgroundColor: ['#f87171', '#4ade80'], borderRadius: 4, barThickness: 32 }]
+            labels: ['Baseline -O2', 'Petal'],
+            datasets: [{ data: window.chartDataEnergy, backgroundColor: ['#f87171', '#4ade80'], borderRadius: 4, barThickness: 32 }]
           },
           options: miniOpts
         });
@@ -2235,6 +2263,18 @@
         termBody.innerHTML = '<div class="demo-term-line"><span class="demo-term-prompt">$</span> ' + cmdLine + '</div>';
         runBtn.disabled = true;
         if (termCursor) termCursor.remove();
+        
+        // Reset UI
+        document.getElementById('heroDesc').innerHTML = "Running benchmark...";
+        document.getElementById('runsTableBody').innerHTML = "";
+        document.getElementById('correctnessBanner').style.display = 'none';
+        document.getElementById('telemetryCard').style.display = 'none';
+        window.chartDataTime = [0, 0];
+        window.chartDataEnergy = [0, 0];
+        document.getElementById('heroBaseEnergy').innerText = "-- J";
+        document.getElementById('heroPetalEnergy').innerText = "-- J";
+        document.getElementById('heroTime').innerText = "-- s";
+        
 
         try {
           // Robustly extract the C code line-by-line from the DOM, stripping nested tooltips
@@ -2286,8 +2326,75 @@
                       console.error("Failed to parse optimized code", e);
                     }
                   }
+                } else if (part.startsWith("event: run_metadata")) {
+                   const dataLine = part.split("\n").find(l => l.startsWith("data: "));
+                   if (dataLine) {
+                      const meta = JSON.parse(dataLine.replace("data: ", ""));
+                      const tCard = document.getElementById('telemetryCard');
+                      const tDetails = document.getElementById('telemetryDetails');
+                      const tBadge = document.getElementById('telemetryEstBadge');
+                      
+                      tCard.style.display = 'block';
+                      
+                      if (meta.collector) {
+                          let text = `Collector used: <strong>${meta.collector.used}</strong> &bull; Confidence: ${meta.collector.confidence}`;
+                          if (meta.collector.fallback_used) text += ` &bull; Requested: ${meta.collector.requested} (fallback)`;
+                          tDetails.innerHTML = text;
+                      }
+                      
+                      if (meta.measurement && meta.measurement.is_estimate) {
+                          tBadge.style.display = 'inline-block';
+                      } else {
+                          tBadge.style.display = 'none';
+                      }
+                   }
+                } else if (part.startsWith("event: run_update")) {
+                   const dataLine = part.split("\n").find(l => l.startsWith("data: "));
+                   if (dataLine) {
+                      const update = JSON.parse(dataLine.replace("data: ", ""));
+                      const tbody = document.getElementById('runsTableBody');
+                      const tr = document.createElement('tr');
+                      tr.style.borderBottom = "1px solid rgba(255,255,255,0.05)";
+                      tr.innerHTML = `
+                        <td style="padding: 0.5rem;">${update.variant}</td>
+                        <td style="padding: 0.5rem;">${update.run_index}</td>
+                        <td style="padding: 0.5rem;">${update.runtime_s.toFixed(4)}</td>
+                        <td style="padding: 0.5rem; color: ${update.variant === 'optimized' ? '#4ade80' : '#f87171'};">${update.energy_j.toFixed(2)}</td>
+                      `;
+                      tbody.appendChild(tr);
+                   }
                 } else if (part.startsWith("event: done")) {
-                  // Ignore done event line text
+                   const dataLine = part.split("\n").find(l => l.startsWith("data: "));
+                   if (dataLine && dataLine !== "data: done") {
+                       const doneData = JSON.parse(dataLine.replace("data: ", ""));
+                       
+                       if (doneData.correctness && doneData.correctness.passed === false) {
+                           document.getElementById('correctnessBanner').style.display = 'block';
+                           document.getElementById('heroDesc').innerHTML = "<strong>Correctness mismatch detected:</strong> the outputs differ. Energy savings may not be meaningful.";
+                       } else if (doneData.comparison && doneData.comparison.energy_delta_pct !== undefined) {
+                           let pct = doneData.comparison.energy_delta_pct;
+                           document.getElementById('heroDesc').innerHTML = `Benchmark completed successfully. Petal reduced energy consumption by <strong>${Math.abs(pct)}%</strong>.`;
+                       }
+                       
+                       if (doneData.comparison && doneData.comparison.energy_median) {
+                           const b_e = doneData.comparison.energy_median.baseline;
+                           const o_e = doneData.comparison.energy_median.optimized;
+                           const b_r = doneData.comparison.runtime_median.baseline;
+                           const o_r = doneData.comparison.runtime_median.optimized;
+                           
+                           document.getElementById('heroBaseEnergy').innerText = b_e.toFixed(2) + " J";
+                           document.getElementById('heroPetalEnergy').innerText = o_e.toFixed(2) + " J";
+                           document.getElementById('heroTime').innerText = o_r.toFixed(2) + " s";
+                           
+                           document.getElementById('reportTimePetal').innerText = o_r.toFixed(2) + "s";
+                           document.getElementById('reportEnergyPetal').innerText = o_e.toFixed(2) + "J";
+                           document.getElementById('reportEnergyPct').innerText = doneData.comparison.energy_delta_pct + "% vs Baseline";
+                           
+                           window.chartDataTime = [b_r, o_r];
+                           window.chartDataEnergy = [b_e, o_e];
+                           renderDemoCharts();
+                       }
+                   }
                 } else if (part.startsWith("data: ")) {
                   const lineData = part.replace("data: ", "").trim();
 

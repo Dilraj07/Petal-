@@ -28,6 +28,10 @@ def compile_code():
     optimize = data.get('optimize', 'energy')
     policy = data.get('policy', 'balanced')
     collector = data.get('collector', 'auto')
+    try:
+        runs = max(1, min(int(data.get('runs', 5)), 10))  # client-controlled, capped at 10
+    except (ValueError, TypeError):
+        runs = 5
     
     # Save the incoming source code to a file
     test_dir = os.path.join(BASE_DIR, "data", "test_workloads")
@@ -54,6 +58,7 @@ def compile_code():
             f"--collector={collector}",
             f"--output-bin={output_bin}",
             f"--metadata-file={metadata_file}",
+            f"--runs={runs}",
         ]
         if tdp:
             cmd.append(f"--tdp={tdp}")
@@ -65,19 +70,30 @@ def compile_code():
             
             for line in iter(process.stdout.readline, ''):
                 line = line.strip()
+                if line.startswith("@@RUN_UPDATE@@: "):
+                    run_update_data = line.replace("@@RUN_UPDATE@@: ", "")
+                    yield f"event: run_update\ndata: {run_update_data}\n\n"
+                    continue
+
                 if line:
-                    time.sleep(0.5)  # Add a tiny realistic delay for the "compilation feeling"
+                    time.sleep(0.1)  # Add a tiny realistic delay for the "compilation feeling"
                 yield f"data: {line}\n\n"
                 
             process.stdout.close()
             process.wait()
-            
-            # Finally, read the optimized code and send it as an event
+
+            # Surface pipeline failure to the client
+            if process.returncode != 0:
+                yield f"data: [Petal] Pipeline exited with code {process.returncode}\n\n"
+
+            # Send optimized source if generated
             if os.path.exists(opt_file):
                 with open(opt_file, "r", encoding="utf-8") as f:
                     opt_code = f.read()
                 # Encode optimized code so it doesn't break SSE framing
                 yield f"event: optimized_code\ndata: {json.dumps({'code': opt_code})}\n\n"
+
+            metadata = {}
             if os.path.exists(metadata_file):
                 with open(metadata_file, "r", encoding="utf-8") as f:
                     metadata = json.load(f)
@@ -91,7 +107,14 @@ def compile_code():
                         os.remove(path)
                     except OSError:
                         pass
-            yield f"event: done\ndata: done\n\n"
+            pipeline_ok = process is None or process.returncode == 0
+            done_payload = {
+                "status": "ok" if pipeline_ok else "error",
+                "error": None if pipeline_ok else f"Pipeline exited with code {process.returncode}",
+                "comparison": metadata.get("comparison", {}),
+                "correctness": metadata.get("correctness", {})
+            }
+            yield f"event: done\ndata: {json.dumps(done_payload)}\n\n"
 
     return Response(generate(), mimetype='text/event-stream')
 

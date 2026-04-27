@@ -38,7 +38,8 @@ class TestPipelineCore(unittest.TestCase):
     def test_transformer_applies_loop_tiling_markers(self):
         optimized = apply_loop_tiling(NAIVE_SAMPLE)
         self.assertIn("int blockSize = 64", optimized)
-        self.assertIn("for(int i=0; i<N; i+=blockSize)", optimized)
+        self.assertIn("for(int i=0; i<N; i+=64)", optimized)
+        self.assertIn("for(int ii=i; ii<i+64; ii++)", optimized)
         self.assertIn("C[ii][jj] += A[ii][kk] * B[kk][jj];", optimized)
 
 

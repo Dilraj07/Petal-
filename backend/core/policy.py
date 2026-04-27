@@ -27,8 +27,8 @@ POLICY_CONFIGS = {
     ),
     "perf": PolicyConfig(
         name="perf",
-        min_hotspot_confidence=0.9,
-        optimized_flags=("-O3",),
+        min_hotspot_confidence=0.85,
+        optimized_flags=("-O3", "-march=native", "-funroll-loops"),
         baseline_flags=("-O3",),
     ),
 }

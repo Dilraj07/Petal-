@@ -4,5 +4,6 @@ Flask-Cors>=4.0.0
 pyRAPL>=0.2.3
 celery>=5.3.6
 redis>=5.0.3
-structlog>=24.1.0
-zeus-apple-silicon; sys_platform == 'darwin'
+structlog==24.1.0
+zeus-apple-silicon
+PyYAML==6.0.1; sys_platform == 'darwin'

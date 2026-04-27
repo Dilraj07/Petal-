@@ -1401,7 +1401,7 @@
     }
 
     .tech-card:hover .tech-logo img {
-      filter: grayscale(0%) brightness(1)
+      filter: grayscale(0%) brightness(1) invert(0)
     }
 
     .tech-name {
@@ -1504,6 +1504,157 @@
       transition-delay: 0.4s
     }
 
+    /* ═══════════════════ CLI SECTION ═══════════════════ */
+    .cli-section {
+      padding: 6rem 0;
+      background: linear-gradient(180deg, #0a0a0a 0%, #111114 100%);
+    }
+
+    .cli-examples {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin: 3rem 0;
+    }
+
+    .cli-example {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      overflow: hidden;
+      font-family: 'Courier New', monospace;
+    }
+
+    .cli-header {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .cli-prompt {
+      color: #4ade80;
+      font-weight: bold;
+    }
+
+    .cli-command {
+      color: #e4e4e7;
+      font-size: 0.9rem;
+    }
+
+    .cli-output {
+      padding: 1.5rem;
+      font-size: 0.85rem;
+    }
+
+    .cli-line {
+      margin-bottom: 0.5rem;
+      color: #a1a1aa;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .cli-line.success {
+      color: #4ade80;
+      font-weight: 600;
+    }
+
+    .process-flow {
+      margin: 4rem 0;
+    }
+
+    .process-flow h3 {
+      text-align: center;
+      margin-bottom: 3rem;
+      color: #e4e4e7;
+      font-size: 1.8rem;
+    }
+
+    .flow-diagram {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .flow-step {
+      flex: 0 0 calc(14.285% - 1rem);
+      text-align: center;
+      min-width: 120px;
+    }
+
+    .flow-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .flow-content h4 {
+      color: #e4e4e7;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .flow-content p {
+      color: #71717a;
+      font-size: 0.75rem;
+      line-height: 1.4;
+    }
+
+    .flow-arrow {
+      color: #4ade80;
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .cli-advanced {
+      margin: 4rem 0;
+    }
+
+    .cli-advanced h3 {
+      text-align: center;
+      margin-bottom: 2rem;
+      color: #e4e4e7;
+      font-size: 1.5rem;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+
+    .option-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .option-card:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.12);
+      transform: translateY(-2px);
+    }
+
+    .option-flag {
+      color: #fbbf24;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .option-desc {
+      color: #a1a1aa;
+      font-size: 0.8rem;
+      line-height: 1.4;
+    }
+
     /* ═══════════════════ RESPONSIVE ═══════════════════ */
     @media(max-width:768px) {
       .hero-mosaic {
@@ -1597,6 +1748,29 @@
       .container {
         padding: 0 1.5rem
       }
+
+      .cli-examples {
+        grid-template-columns: 1fr
+      }
+
+      .flow-diagram {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .flow-step {
+        flex: 1 1 100%;
+        max-width: 200px;
+      }
+
+      .flow-arrow {
+        transform: rotate(90deg);
+        margin: 1rem 0;
+      }
+
+      .options-grid {
+        grid-template-columns: 1fr
+      }
     }
 
     @media print {
@@ -1639,6 +1813,7 @@
         <div class="nav-center">
           <a href="#demo-sec">Demo</a>
           <a href="#pipeline-sec">Pipeline</a>
+          <a href="#cli-sec">CLI</a>
           <a href="#charts-sec">Metrics</a>
           <a href="#iso-sec">Architecture</a>
           <a href="#tech-sec">Stack</a>
@@ -1655,22 +1830,22 @@
     <div class="hero-mosaic-img"></div>
     <div class="hero-mosaic-grid">
       <div class="hero-mosaic-cell">
-        <span class="hero-mosaic-cell-label">LLVM IR</span>
+        <span class="hero-mosaic-cell-label">Loop Tiling</span>
       </div>
       <div class="hero-mosaic-cell">
-        <span class="hero-mosaic-cell-label">Energy Profiling</span>
+        <span class="hero-mosaic-cell-label">GCC Backend</span>
       </div>
       <div class="hero-mosaic-cell">
-        <span class="hero-mosaic-cell-label">AMD uProf</span>
+        <span class="hero-mosaic-cell-label">Hardware Telemetry</span>
       </div>
       <div class="hero-mosaic-cell">
         <span class="hero-mosaic-cell-label">Cache Analysis</span>
       </div>
       <div class="hero-mosaic-cell">
-        <span class="hero-mosaic-cell-label">XGBoost NPU</span>
+        <span class="hero-mosaic-cell-label">Policy Engine</span>
       </div>
       <div class="hero-mosaic-cell">
-        <span class="hero-mosaic-cell-label">Loop Tiling</span>
+        <span class="hero-mosaic-cell-label">Energy Profiling</span>
       </div>
     </div>
   </section>
@@ -1679,7 +1854,9 @@
   <section class="hero-text">
     <div class="container">
       <h1 class="reveal">Energy-Aware<br>Compilation</h1>
-      <p class="reveal reveal-d1" id="heroDesc">We're solving the compiler's energy blind spot. Enter your C code below and run the benchmark to see the energy profile and optimization results.</p>
+      <p class="reveal reveal-d1" id="heroDesc">Petal transforms energy-inefficient code by applying cache-friendly loop
+        tiling optimizations. Our policy-driven approach balances performance with energy savings based on your hardware
+        constraints.</p>
       <div class="hero-buttons reveal reveal-d2">
         <button class="btn primary">View Metrics</button>
         <button class="btn">View Source</button>
@@ -1708,20 +1885,28 @@
     <div class="two-col-panel reveal">
       <span class="panel-tag">Build</span>
       <div class="panel-title">Petal Compiler <span class="arrow">&#10148;</span></div>
-      <p class="panel-desc">Give your binaries the ability to sense and adapt to physical power draw, so they behave
-        more like hardware and less like blind software.</p>
-      <div class="panel-sub">Explore our pipeline</div>
+      <p class="panel-desc">Petal transforms energy-inefficient code by applying cache-friendly loop tiling
+        optimizations. Our policy-driven approach balances performance with energy savings based on your hardware
+        constraints.</p>
+      <div class="panel-sub">Current Features</div>
       <div class="panel-link">
         <div class="panel-link-main">
-          <span class="panel-link-title">LLVM Green Pass</span>
-          <span class="panel-link-desc">Custom energy-aware IR transformation</span>
+          <span class="panel-link-title">Loop Tiling Optimizer</span>
+          <span class="panel-link-desc">Automatic cache-blocking for matrix operations</span>
         </div>
         <span class="panel-link-arrow">&#10148;</span>
       </div>
       <div class="panel-link">
         <div class="panel-link-main">
-          <span class="panel-link-title">AMD uProf Integration</span>
-          <span class="panel-link-desc">Hardware-in-the-loop telemetry profiling</span>
+          <span class="panel-link-title">Multi-Platform Telemetry</span>
+          <span class="panel-link-desc">AMD uProf, Intel RAPL, Apple Silicon support</span>
+        </div>
+        <span class="panel-link-arrow">&#10148;</span>
+      </div>
+      <div class="panel-link">
+        <div class="panel-link-main">
+          <span class="panel-link-title">Policy-Driven Compilation</span>
+          <span class="panel-link-desc">Eco, Balanced, Performance profiles</span>
         </div>
         <span class="panel-link-arrow">&#10148;</span>
       </div>
@@ -1729,24 +1914,27 @@
     <div class="two-col-panel reveal reveal-d2">
       <span class="panel-tag">Discover</span>
       <div class="panel-title">Analysis Results <span class="arrow">&#10148;</span></div>
-      <p class="panel-desc">We are building compilation infrastructure that treats the Joule as a first-class metric,
-        alongside speed and binary size.</p>
-      <div class="panel-sub">Key findings</div>
+      <p class="panel-desc">Real energy optimization results from our GCC-based pipeline. See actual Joules saved, cache
+        miss reductions, and performance improvements from loop tiling transformations.</p>
+      <div class="panel-sub">Measured Results</div>
       <div class="panel-link">
         <div class="panel-link-main">
-          <span class="panel-link-title">Cache Thrashing at line 11</span>
+          <span class="panel-link-title">Cache Thrashing Detection</span>
+          <span class="panel-link-desc">Identified O(N³) nested loops in matrix code</span>
         </div>
         <span class="panel-link-arrow">&#10148;</span>
       </div>
       <div class="panel-link">
         <div class="panel-link-main">
-          <span class="panel-link-title">Loop Tiling: 38% Energy Savings</span>
+          <span class="panel-link-title">Loop Tiling: 21-38% Energy Savings</span>
+          <span class="panel-link-desc">Cache-friendly block processing</span>
         </div>
         <span class="panel-link-arrow">&#10148;</span>
       </div>
       <div class="panel-link">
         <div class="panel-link-main">
-          <span class="panel-link-title">22.2 Joules Saved Per Execution</span>
+          <span class="panel-link-title">Hardware-Verified Measurements</span>
+          <span class="panel-link-desc">Real telemetry from AMD/Intel/Apple Silicon</span>
         </div>
         <span class="panel-link-arrow">&#10148;</span>
       </div>
@@ -1760,30 +1948,30 @@
         <div class="arch-info reveal">
           <div class="section-tag">Architecture</div>
           <h2>Closed-Loop Pipeline</h2>
-          <p>Petal's four-stage pipeline reads C source, profiles hardware telemetry, predicts energy hotspots via ML,
-            and rewrites LLVM IR — all before the final binary is emitted.</p>
+          <p>Petal's four-stage pipeline reads C source, detects energy hotspots, applies policy-driven optimizations,
+            and measures real hardware telemetry — all powered by GCC and advanced energy profiling.</p>
         </div>
         <div class="arch-plane-wrap reveal reveal-d2">
           <div class="arch-plane">
             <div class="arch-node n1">
               <span class="arch-node-step">01 — Input</span>
-              <div class="arch-node-title">LLVM Frontend</div>
-              <div class="arch-node-val">ClangIR from target_naive.c</div>
+              <div class="arch-node-title">C Source Analysis</div>
+              <div class="arch-node-val">Matrix multiplication detected</div>
             </div>
             <div class="arch-node n2">
               <span class="arch-node-step">02 — Profile</span>
-              <div class="arch-node-title">AMD uProf</div>
-              <div class="arch-node-val">PPT: 45.2W • Cache Miss: 87%</div>
+              <div class="arch-node-title">Hardware Telemetry</div>
+              <div class="arch-node-val">AMD uProf/Intel RAPL/Synthetic</div>
             </div>
             <div class="arch-node n3">
-              <span class="arch-node-step">03 — Predict</span>
-              <div class="arch-node-title">XGBoost NPU</div>
-              <div class="arch-node-val">Pred: -38% Energy • 0.92 F1</div>
+              <span class="arch-node-step">03 — Optimize</span>
+              <div class="arch-node-title">Policy Engine</div>
+              <div class="arch-node-val">Eco/Balanced/Perf profiles</div>
             </div>
             <div class="arch-node n4">
               <span class="arch-node-step">04 — Output</span>
-              <div class="arch-node-title">Green Pass</div>
-              <div class="arch-node-val">Loop Tiled • 34.2J • 1.18s</div>
+              <div class="arch-node-title">GCC + Loop Tiling</div>
+              <div class="arch-node-val">Cache-friendly blocks generated</div>
             </div>
           </div>
         </div>
@@ -1914,17 +2102,22 @@
             </div>
           </div>
           <div class="demo-term-body" id="termBody">
-            <div class="demo-term-line"><span class="demo-term-prompt">$</span> python petal_build.py target_naive.c
+            <div class="demo-term-line"><span class="demo-term-prompt">$</span> python main.py target_naive.c
               --optimize=energy<span class="demo-term-cursor" id="termCursor"></span></div>
           </div>
           <div class="demo-report-body" id="reportBody">
-            <div id="correctnessBanner" style="display:none; padding: 1rem; background: rgba(248,113,113,0.1); border: 1px solid #f87171; border-radius: 6px; color: #f87171; margin-bottom: 1rem; font-size: 0.8rem; font-weight: 600;">
+            <div id="correctnessBanner"
+              style="display:none; padding: 1rem; background: rgba(248,113,113,0.1); border: 1px solid #f87171; border-radius: 6px; color: #f87171; margin-bottom: 1rem; font-size: 0.8rem; font-weight: 600;">
               Correctness mismatch detected: outputs differ. Energy savings may not be meaningful.
             </div>
-            
-            <div id="telemetryCard" style="display:none; padding: 1rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; margin-bottom: 1rem; font-size: 0.75rem;">
-               <div id="telemetryDetails" style="color: #e4e4e7;"></div>
-               <div id="telemetryEstBadge" style="display:none; margin-top: 0.5rem; padding: 0.2rem 0.5rem; background: rgba(251,191,36,0.1); color: #fbbf24; border: 1px solid #fbbf24; border-radius: 4px; font-size: 0.65rem;" title="Energy numbers are derived from a CPU-time model, not from a hardware Joule counter. Relative trends may still be meaningful.">Estimated telemetry (not hardware counter)</div>
+
+            <div id="telemetryCard"
+              style="display:none; padding: 1rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; margin-bottom: 1rem; font-size: 0.75rem;">
+              <div id="telemetryDetails" style="color: #e4e4e7;"></div>
+              <div id="telemetryEstBadge"
+                style="display:none; margin-top: 0.5rem; padding: 0.2rem 0.5rem; background: rgba(251,191,36,0.1); color: #fbbf24; border: 1px solid #fbbf24; border-radius: 4px; font-size: 0.65rem;"
+                title="Energy numbers are derived from a CPU-time model, not from a hardware Joule counter. Relative trends may still be meaningful.">
+                Estimated telemetry (not hardware counter)</div>
             </div>
 
             <div class="demo-report-title">Petal Optimization Report</div>
@@ -1946,23 +2139,24 @@
                 </div>
               </div>
             </div>
-            
+
             <div style="margin-top: 2rem;">
-               <div class="demo-report-title">Live Runs Table</div>
-               <div style="max-height: 180px; overflow-y: auto;">
-                   <table id="runsTable" style="width:100%; border-collapse: collapse; font-size: 0.75rem; text-align: left;">
-                      <thead style="position: sticky; top: 0; background: #111114;">
-                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: #71717a;">
-                          <th style="padding: 0.5rem;">Variant</th>
-                          <th style="padding: 0.5rem;">Run</th>
-                          <th style="padding: 0.5rem;">Runtime (s)</th>
-                          <th style="padding: 0.5rem;">Energy (J)</th>
-                        </tr>
-                      </thead>
-                      <tbody id="runsTableBody">
-                      </tbody>
-                   </table>
-               </div>
+              <div class="demo-report-title">Live Runs Table</div>
+              <div style="max-height: 180px; overflow-y: auto;">
+                <table id="runsTable"
+                  style="width:100%; border-collapse: collapse; font-size: 0.75rem; text-align: left;">
+                  <thead style="position: sticky; top: 0; background: #111114;">
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: #71717a;">
+                      <th style="padding: 0.5rem;">Variant</th>
+                      <th style="padding: 0.5rem;">Run</th>
+                      <th style="padding: 0.5rem;">Runtime (s)</th>
+                      <th style="padding: 0.5rem;">Energy (J)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="runsTableBody">
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
@@ -1983,30 +2177,178 @@
   <!-- ═══════ PIPELINE ═══════ -->
   <section class="pipeline-section" id="pipeline-sec">
     <div class="container">
-      <div class="section-header reveal">
-        <div class="section-tag">Pipeline</div>
-        <h2 class="section-title">What Petal Did</h2>
+      <div class="section-tag">Pipeline</div>
+      <h2 class="section-title">What Petal Did</h2>
+    </div>
+    <div class="pipeline-grid">
+      <div class="pipeline-card reveal">
+        <div class="pipeline-step-num">01</div>
+        <h3>Hotspot Detection</h3>
+        <p>Analyzes C source for O(N³) nested loops and cache-inefficient patterns using regex-based static analysis.
+        </p>
       </div>
-      <div class="pipeline-grid">
-        <div class="pipeline-card reveal">
-          <div class="pipeline-step-num">01</div>
-          <h3>IR Generation</h3>
-          <p>Initialized LLVM 22.0 frontend and generated ClangIR from the target C source file.</p>
+      <div class="pipeline-card reveal reveal-d1">
+        <div class="pipeline-step-num">02</div>
+        <h3>Policy Decision</h3>
+        <p>Eco, Balanced, or Performance profiles determine optimization aggressiveness based on confidence thresholds.
+        </p>
+      </div>
+      <div class="pipeline-card reveal reveal-d2">
+        <div class="pipeline-step-num">03</div>
+        <h3>Loop Tiling</h3>
+        <p>Applies cache-blocking transformations with configurable tile sizes (32-128) for improved data locality.</p>
+      </div>
+      <div class="pipeline-card reveal reveal-d3">
+        <div class="pipeline-step-num">04</div>
+        <h3>Hardware Telemetry</h3>
+        <p>Profiles real energy consumption via AMD uProf, Intel RAPL, Apple Silicon, or synthetic CPU modeling.</p>
+      </div>
+    </div>
+    </div>
+  </section>
+
+  <!-- ═══════ CLI & WORKFLOW ═══════ -->
+  <section class="cli-section" id="cli-sec">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-tag">CLI Interface</div>
+        <h2 class="section-title">Command-Line Workflow</h2>
+      </div>
+
+      <!-- CLI Command Examples -->
+      <div class="cli-examples reveal">
+        <div class="cli-example">
+          <div class="cli-header">
+            <span class="cli-prompt">$</span>
+            <span class="cli-command">python main.py target_naive.c --optimize=energy</span>
+          </div>
+          <div class="cli-output">
+            <div class="cli-line">[INFO] Analyzing C source for energy hotspots...</div>
+            <div class="cli-line">[DETECT] Found O(N³) nested loops at lines 8-11</div>
+            <div class="cli-line">[POLICY] Eco mode selected (confidence: 0.92)</div>
+            <div class="cli-line">[TRANSFORM] Applying loop tiling with block size: 64</div>
+            <div class="cli-line success">[SUCCESS] Energy optimization complete: 34% savings</div>
+          </div>
         </div>
-        <div class="pipeline-card reveal reveal-d1">
-          <div class="pipeline-step-num">02</div>
-          <h3>Hardware Telemetry</h3>
-          <p>Profiled against AMD uProf metrics. Baseline PPT: 45.2W. Thermal spikes from cache thrashing.</p>
+
+        <div class="cli-example reveal reveal-d1">
+          <div class="cli-header">
+            <span class="cli-prompt">$</span>
+            <span class="cli-command">python main.py matrix_multiply.c --policy=perf --tdp=120W</span>
+          </div>
+          <div class="cli-output">
+            <div class="cli-line">[PERF] Performance mode activated</div>
+            <div class="cli-line">[TDP] Thermal limit set to 120W (Server mode)</div>
+            <div class="cli-line">[OPTIMIZE] Aggressive optimization: block size 32</div>
+            <div class="cli-line">[TELEMETRY] Hardware collector: AMD uProf detected</div>
+            <div class="cli-line success">[SUCCESS] Optimized for performance under power constraints</div>
+          </div>
         </div>
-        <div class="pipeline-card reveal reveal-d2">
-          <div class="pipeline-step-num">03</div>
-          <h3>ML Prediction</h3>
-          <p>Offloaded to Ryzen AI NPU. XGBoost identified inefficient loop nesting, predicting 38% savings.</p>
+      </div>
+
+      <!-- Process Flow Diagram -->
+      <div class="process-flow reveal reveal-d2">
+        <h3>Complete Process Flow</h3>
+        <div class="flow-diagram">
+          <div class="flow-step">
+            <div class="flow-icon"><img
+                src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/cplusplus/cplusplus-original.svg" alt="C++"
+                style="width: 48px; height: 48px;" /></div>
+            <div class="flow-content">
+              <h4>1. Input Analysis</h4>
+              <p>C source code parsed for energy-intensive patterns</p>
+            </div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <div class="flow-icon"><img
+                src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" alt="Python"
+                style="width: 48px; height: 48px;" /></div>
+            <div class="flow-content">
+              <h4>2. Hotspot Detection</h4>
+              <p>Regex-based identification of O(N³) loops and cache thrashing</p>
+            </div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <div class="flow-icon"><img
+                src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/settings/settings-original.svg" alt="Settings"
+                style="width: 48px; height: 48px;" /></div>
+            <div class="flow-content">
+              <h4>3. Policy Decision</h4>
+              <p>Eco/Balanced/Perf profiles determine optimization strategy</p>
+            </div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <div class="flow-icon"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/gcc/gcc-original.svg"
+                alt="GCC" style="width: 48px; height: 48px;" /></div>
+            <div class="flow-content">
+              <h4>4. Code Transformation</h4>
+              <p>Loop tiling applied with configurable block sizes</p>
+            </div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <div class="flow-icon"><img
+                src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linux/linux-original.svg" alt="Linux"
+                style="width: 48px; height: 48px;" /></div>
+            <div class="flow-content">
+              <h4>5. GCC Compilation</h4>
+              <p>Optimized code compiled with -O2 flags</p>
+            </div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <div class="flow-icon"><img
+                src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/chrome/chrome-original.svg" alt="Chrome"
+                style="width: 48px; height: 48px;" /></div>
+            <div class="flow-content">
+              <h4>6. Telemetry Profiling</h4>
+              <p>Real hardware energy measurement via platform-specific collectors</p>
+            </div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <div class="flow-icon"><img
+                src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg" alt="GitHub"
+                style="width: 48px; height: 48px;" /></div>
+            <div class="flow-content">
+              <h4>7. Results Report</h4>
+              <p>Energy savings, performance metrics, and recommendations</p>
+            </div>
+          </div>
         </div>
-        <div class="pipeline-card reveal reveal-d3">
-          <div class="pipeline-step-num">04</div>
-          <h3>IR Rewrite</h3>
-          <p>Applied PetalEnergyOptimizationPass — swapped naive O(N³) loop with blocked, cache-friendly iteration.</p>
+      </div>
+
+      <!-- Advanced Options -->
+      <div class="cli-advanced reveal reveal-d3">
+        <h3>Advanced CLI Options</h3>
+        <div class="options-grid">
+          <div class="option-card">
+            <div class="option-flag">--policy=eco|balanced|perf</div>
+            <div class="option-desc">Choose optimization profile</div>
+          </div>
+          <div class="option-card">
+            <div class="option-flag">--tdp=15W|120W|custom</div>
+            <div class="option-desc">Set thermal design power limits</div>
+          </div>
+          <div class="option-card">
+            <div class="option-flag">--block-size=32|64|128</div>
+            <div class="option-desc">Specify loop tiling block size</div>
+          </div>
+          <div class="option-card">
+            <div class="option-flag">--telemetry=auto|synthetic</div>
+            <div class="option-desc">Force telemetry collector type</div>
+          </div>
+          <div class="option-card">
+            <div class="option-flag">--output=json|yaml</div>
+            <div class="option-desc">Export results in specified format</div>
+          </div>
+          <div class="option-card">
+            <div class="option-flag">--verbose</div>
+            <div class="option-desc">Detailed compilation and profiling logs</div>
+          </div>
         </div>
       </div>
     </div>
@@ -2078,24 +2420,27 @@
       </div>
       <div class="tech-grid">
         <div class="tech-card reveal">
-          <div class="tech-logo"><img src="https://llvm.org/img/LLVMWyvernSmall.png" alt="LLVM" /></div>
-          <div class="tech-name">LLVM 22+</div>
-          <div class="tech-desc">Compiler Infrastructure</div>
+          <div class="tech-logo"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/gcc/gcc-original.svg"
+              alt="GCC" /></div>
+          <div class="tech-name">GCC</div>
+          <div class="tech-desc">Compiler Backend</div>
         </div>
         <div class="tech-card reveal reveal-d1">
-          <div class="tech-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/6/69/XGBoost_logo.png"
-              alt="XGBoost" /></div>
-          <div class="tech-name">XGBoost</div>
-          <div class="tech-desc">ML Prediction Engine</div>
-        </div>
-        <div class="tech-card reveal reveal-d2">
-          <div class="tech-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/7/7c/AMD_Logo.svg"
-              alt="AMD" /></div>
+          <div class="tech-logo"><img src="https://upload.wikimedia.org/wikipedia/commons/7/7c/AMD_Logo.svg" alt="AMD"
+              style="width: 48px; height: 48px; object-fit: contain; filter: brightness(0) invert(1);" /></div>
           <div class="tech-name">AMD uProf</div>
           <div class="tech-desc">Hardware Telemetry</div>
         </div>
+        <div class="tech-card reveal reveal-d2">
+          <div class="tech-logo"><img
+              src="data:image/png;base64,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"
+              alt="Intel" style="width: 48px; height: 48px; object-fit: contain;" /></div>
+          <div class="tech-name">Intel RAPL</div>
+          <div class="tech-desc">Energy Monitoring</div>
+        </div>
         <div class="tech-card reveal reveal-d3">
-          <div class="tech-logo"><img src="https://www.chartjs.org/img/chartjs-logo.svg" alt="Chart.js" /></div>
+          <div class="tech-logo"><img src="https://www.chartjs.org/img/chartjs-logo.svg" alt="Chart.js"
+              style="width: 48px; height: 48px; filter: brightness(0) invert(1);" /></div>
           <div class="tech-name">Chart.js</div>
           <div class="tech-desc">Data Visualization</div>
         </div>
@@ -2122,9 +2467,9 @@
       <div class="footer-grid">
         <div class="footer-col">
           <div class="footer-col-title">Product</div>
-          <a href="#">LLVM Green Pass</a>
-          <a href="#">Energy Remarks</a>
-          <a href="#">ESG Dashboard</a>
+          <a href="#">Loop Tiling Optimizer</a>
+          <a href="#">Policy Engine</a>
+          <a href="#">Energy Dashboard</a>
         </div>
         <div class="footer-col">
           <div class="footer-col-title">Developers</div>
@@ -2140,9 +2485,9 @@
         </div>
         <div class="footer-col">
           <div class="footer-col-title">Stack</div>
-          <a href="#">LLVM 22+</a>
-          <a href="#">XGBoost</a>
-          <a href="#">AMD uProf</a>
+          <a href="#">GCC Backend</a>
+          <a href="#">Hardware Telemetry</a>
+          <a href="#">Future: LLVM IR</a>
         </div>
       </div>
       <div class="footer-bottom">
@@ -2231,7 +2576,7 @@
             y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#52525b', font: { size: 10 } }, beginAtZero: true }
           }
         };
-        
+
         if (demoChartTimeInstance) demoChartTimeInstance.destroy();
         demoChartTimeInstance = new Chart(document.getElementById('demoChartTime'), {
           type: 'bar',
@@ -2241,7 +2586,7 @@
           },
           options: miniOpts
         });
-        
+
         if (demoChartEnergyInstance) demoChartEnergyInstance.destroy();
         demoChartEnergyInstance = new Chart(document.getElementById('demoChartEnergy'), {
           type: 'bar',
@@ -2263,7 +2608,7 @@
         termBody.innerHTML = '<div class="demo-term-line"><span class="demo-term-prompt">$</span> ' + cmdLine + '</div>';
         runBtn.disabled = true;
         if (termCursor) termCursor.remove();
-        
+
         // Reset UI
         document.getElementById('heroDesc').innerHTML = "Running benchmark...";
         document.getElementById('runsTableBody').innerHTML = "";
@@ -2274,7 +2619,7 @@
         document.getElementById('heroBaseEnergy').innerText = "-- J";
         document.getElementById('heroPetalEnergy').innerText = "-- J";
         document.getElementById('heroTime').innerText = "-- s";
-        
+
 
         try {
           // Robustly extract the C code line-by-line from the DOM, stripping nested tooltips
@@ -2327,74 +2672,74 @@
                     }
                   }
                 } else if (part.startsWith("event: run_metadata")) {
-                   const dataLine = part.split("\n").find(l => l.startsWith("data: "));
-                   if (dataLine) {
-                      const meta = JSON.parse(dataLine.replace("data: ", ""));
-                      const tCard = document.getElementById('telemetryCard');
-                      const tDetails = document.getElementById('telemetryDetails');
-                      const tBadge = document.getElementById('telemetryEstBadge');
-                      
-                      tCard.style.display = 'block';
-                      
-                      if (meta.collector) {
-                          let text = `Collector used: <strong>${meta.collector.used}</strong> &bull; Confidence: ${meta.collector.confidence}`;
-                          if (meta.collector.fallback_used) text += ` &bull; Requested: ${meta.collector.requested} (fallback)`;
-                          tDetails.innerHTML = text;
-                      }
-                      
-                      if (meta.measurement && meta.measurement.is_estimate) {
-                          tBadge.style.display = 'inline-block';
-                      } else {
-                          tBadge.style.display = 'none';
-                      }
-                   }
+                  const dataLine = part.split("\n").find(l => l.startsWith("data: "));
+                  if (dataLine) {
+                    const meta = JSON.parse(dataLine.replace("data: ", ""));
+                    const tCard = document.getElementById('telemetryCard');
+                    const tDetails = document.getElementById('telemetryDetails');
+                    const tBadge = document.getElementById('telemetryEstBadge');
+
+                    tCard.style.display = 'block';
+
+                    if (meta.collector) {
+                      let text = `Collector used: <strong>${meta.collector.used}</strong> &bull; Confidence: ${meta.collector.confidence}`;
+                      if (meta.collector.fallback_used) text += ` &bull; Requested: ${meta.collector.requested} (fallback)`;
+                      tDetails.innerHTML = text;
+                    }
+
+                    if (meta.measurement && meta.measurement.is_estimate) {
+                      tBadge.style.display = 'inline-block';
+                    } else {
+                      tBadge.style.display = 'none';
+                    }
+                  }
                 } else if (part.startsWith("event: run_update")) {
-                   const dataLine = part.split("\n").find(l => l.startsWith("data: "));
-                   if (dataLine) {
-                      const update = JSON.parse(dataLine.replace("data: ", ""));
-                      const tbody = document.getElementById('runsTableBody');
-                      const tr = document.createElement('tr');
-                      tr.style.borderBottom = "1px solid rgba(255,255,255,0.05)";
-                      tr.innerHTML = `
+                  const dataLine = part.split("\n").find(l => l.startsWith("data: "));
+                  if (dataLine) {
+                    const update = JSON.parse(dataLine.replace("data: ", ""));
+                    const tbody = document.getElementById('runsTableBody');
+                    const tr = document.createElement('tr');
+                    tr.style.borderBottom = "1px solid rgba(255,255,255,0.05)";
+                    tr.innerHTML = `
                         <td style="padding: 0.5rem;">${update.variant}</td>
                         <td style="padding: 0.5rem;">${update.run_index}</td>
                         <td style="padding: 0.5rem;">${update.runtime_s.toFixed(4)}</td>
                         <td style="padding: 0.5rem; color: ${update.variant === 'optimized' ? '#4ade80' : '#f87171'};">${update.energy_j.toFixed(2)}</td>
                       `;
-                      tbody.appendChild(tr);
-                   }
+                    tbody.appendChild(tr);
+                  }
                 } else if (part.startsWith("event: done")) {
-                   const dataLine = part.split("\n").find(l => l.startsWith("data: "));
-                   if (dataLine && dataLine !== "data: done") {
-                       const doneData = JSON.parse(dataLine.replace("data: ", ""));
-                       
-                       if (doneData.correctness && doneData.correctness.passed === false) {
-                           document.getElementById('correctnessBanner').style.display = 'block';
-                           document.getElementById('heroDesc').innerHTML = "<strong>Correctness mismatch detected:</strong> the outputs differ. Energy savings may not be meaningful.";
-                       } else if (doneData.comparison && doneData.comparison.energy_delta_pct !== undefined) {
-                           let pct = doneData.comparison.energy_delta_pct;
-                           document.getElementById('heroDesc').innerHTML = `Benchmark completed successfully. Petal reduced energy consumption by <strong>${Math.abs(pct)}%</strong>.`;
-                       }
-                       
-                       if (doneData.comparison && doneData.comparison.energy_median) {
-                           const b_e = doneData.comparison.energy_median.baseline;
-                           const o_e = doneData.comparison.energy_median.optimized;
-                           const b_r = doneData.comparison.runtime_median.baseline;
-                           const o_r = doneData.comparison.runtime_median.optimized;
-                           
-                           document.getElementById('heroBaseEnergy').innerText = b_e.toFixed(2) + " J";
-                           document.getElementById('heroPetalEnergy').innerText = o_e.toFixed(2) + " J";
-                           document.getElementById('heroTime').innerText = o_r.toFixed(2) + " s";
-                           
-                           document.getElementById('reportTimePetal').innerText = o_r.toFixed(2) + "s";
-                           document.getElementById('reportEnergyPetal').innerText = o_e.toFixed(2) + "J";
-                           document.getElementById('reportEnergyPct').innerText = doneData.comparison.energy_delta_pct + "% vs Baseline";
-                           
-                           window.chartDataTime = [b_r, o_r];
-                           window.chartDataEnergy = [b_e, o_e];
-                           renderDemoCharts();
-                       }
-                   }
+                  const dataLine = part.split("\n").find(l => l.startsWith("data: "));
+                  if (dataLine && dataLine !== "data: done") {
+                    const doneData = JSON.parse(dataLine.replace("data: ", ""));
+
+                    if (doneData.correctness && doneData.correctness.passed === false) {
+                      document.getElementById('correctnessBanner').style.display = 'block';
+                      document.getElementById('heroDesc').innerHTML = "<strong>Correctness mismatch detected:</strong> the outputs differ. Energy savings may not be meaningful.";
+                    } else if (doneData.comparison && doneData.comparison.energy_delta_pct !== undefined) {
+                      let pct = doneData.comparison.energy_delta_pct;
+                      document.getElementById('heroDesc').innerHTML = `Benchmark completed successfully. Petal reduced energy consumption by <strong>${Math.abs(pct)}%</strong>.`;
+                    }
+
+                    if (doneData.comparison && doneData.comparison.energy_median) {
+                      const b_e = doneData.comparison.energy_median.baseline;
+                      const o_e = doneData.comparison.energy_median.optimized;
+                      const b_r = doneData.comparison.runtime_median.baseline;
+                      const o_r = doneData.comparison.runtime_median.optimized;
+
+                      document.getElementById('heroBaseEnergy').innerText = b_e.toFixed(2) + " J";
+                      document.getElementById('heroPetalEnergy').innerText = o_e.toFixed(2) + " J";
+                      document.getElementById('heroTime').innerText = o_r.toFixed(2) + " s";
+
+                      document.getElementById('reportTimePetal').innerText = o_r.toFixed(2) + "s";
+                      document.getElementById('reportEnergyPetal').innerText = o_e.toFixed(2) + "J";
+                      document.getElementById('reportEnergyPct').innerText = doneData.comparison.energy_delta_pct + "% vs Baseline";
+
+                      window.chartDataTime = [b_r, o_r];
+                      window.chartDataEnergy = [b_e, o_e];
+                      renderDemoCharts();
+                    }
+                  }
                 } else if (part.startsWith("data: ")) {
                   const lineData = part.replace("data: ", "").trim();
 

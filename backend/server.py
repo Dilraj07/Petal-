@@ -40,26 +40,27 @@ def compile_code():
     with os.fdopen(fd, "w", encoding="utf-8") as f:
         f.write(source_code)
         
-    def generate():
-        main_py = os.path.join(BACKEND_DIR, "main.py")
-        root, _ = os.path.splitext(test_file)
-        opt_file = f"{root}_optimized.c"
-        output_bin = f"{root}_petal_out"
-        metadata_file = f"{root}_run_metadata.json"
-        if os.name == "nt":
-            output_bin += ".exe"
-        cmd = [
-            "python3",
-            "-u",
-            main_py,
-            test_file,
-            f"--optimize={optimize}",
-            f"--policy={policy}",
-            f"--collector={collector}",
-            f"--output-bin={output_bin}",
-            f"--metadata-file={metadata_file}",
-            f"--runs={runs}",
-        ]
+        def generate():
+            main_py = os.path.join(BACKEND_DIR, "main.py")
+            root, _ = os.path.splitext(test_file)
+            opt_file = f"{root}_optimized.c"
+            output_bin = f"{root}_petal_out"
+            metadata_file = f"{root}_run_metadata.json"
+            if os.name == "nt":
+                output_bin += ".exe"
+            import sys
+            cmd = [
+                sys.executable,
+                "-u",
+                main_py,
+                test_file,
+                f"--optimize={optimize}",
+                f"--policy={policy}",
+                f"--collector={collector}",
+                f"--output-bin={output_bin}",
+                f"--metadata-file={metadata_file}",
+                f"--runs={runs}",
+            ]
         if tdp:
             cmd.append(f"--tdp={tdp}")
             

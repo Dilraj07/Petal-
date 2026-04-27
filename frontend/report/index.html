@@ -2288,7 +2288,7 @@
 
           // We use POST to send the code, but to get SSE back we need a specialized fetch or EventSource.
           // Since EventSource doesn't support POST with body natively, we'll use fetch and read the stream.
-          const response = await fetch('http://127.0.0.1:5000/compile', {
+          const response = await fetch('/compile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

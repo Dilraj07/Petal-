@@ -116,15 +116,17 @@ def accent(text: str) -> str:
 # ─────────────────────────────────────────────────────────────────────────
 
 def print_header(text: str, width: int = 70) -> None:
-    """Print a bold header with box."""
-    if supports_unicode():
-        print(f"\n{Color.CYAN}╔{'═' * (width - 2)}╗{Color.RESET}")
-        print(f"{Color.CYAN}║ {bold(text):^{width - 4}} ║{Color.RESET}")
-        print(f"{Color.CYAN}╚{'═' * (width - 2)}╝{Color.RESET}\n")
-    else:
-        print(f"\n{'=' * width}")
-        print(f"  {bold(text)}")
-        print(f"{'=' * width}\n")
+    """Print a bold header with ASCII art for Petal."""
+    ascii_art = f"""{Color.GREEN}
+  _____  ______ _______       _      
+ |  __ \\|  ____|__   __|/\\   | |     
+ | |__) | |__     | |  /  \\  | |     
+ |  ___/|  __|    | | / /\\ \\ | |     
+ | |    | |____   | |/ ____ \\| |____ 
+ |_|    |______|  |_/_/    \\_\\______|
+{Color.RESET}"""
+    print(ascii_art)
+    print(f"     {Color.CYAN}{bold(text)}{Color.RESET}\n")
 
 
 def print_section(title: str, content: list[str], width: int = 70) -> None:

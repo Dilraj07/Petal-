@@ -1,0 +1,84 @@
+name: Energy Regression Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  energy-check:
+    name: Petal Energy Gate
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install GCC
+        run: sudo apt-get update && sudo apt-get install -y gcc
+
+      - name: Install Petal
+        run: pip install -e .
+
+      - name: Run Petal energy measurement
+        run: |
+          petal data/matrix_mult.c \
+            --optimise \
+            --policy balanced \
+            --collector auto \
+            --runs 3 \
+            --metadata-out petal_result.json
+
+      - name: Energy regression gate
+        run: |
+          petal check-regression \
+            --result petal_result.json \
+            --baseline benchmarks/energy_baseline.json \
+            --threshold 10 \
+            --telemetry-required any
+
+      - name: Post PR comment on failure
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let result = {};
+            try {
+              result = JSON.parse(fs.readFileSync('petal_result.json', 'utf8'));
+            } catch (e) {
+              result = { source_file: 'unknown', comparison: {} };
+            }
+
+            const baseline_energy = result.baseline?.energy_j || 0;
+            const current_energy = result.optimised?.energy_j || result.baseline?.energy_j || 0;
+            const delta_pct = result.comparison?.energy_delta_pct || 0;
+            const source = result.collector?.used || 'unknown';
+
+            const body = [
+              '⚡ **Petal energy regression detected**',
+              '',
+              `**File**: \`${result.source_file || 'unknown'}\``,
+              `**Baseline**: ${baseline_energy.toFixed(2)} J → **Current**: ${current_energy.toFixed(2)} J`,
+              `**Delta**: ${delta_pct > 0 ? '+' : ''}${delta_pct.toFixed(1)}%`,
+              `**Telemetry**: ${source}`,
+              '',
+              'Run `petal <file> --optimise --explain` for details.',
+            ].join('\n');
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body,
+            });

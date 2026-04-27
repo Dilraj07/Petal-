@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "petal-compiler"
+version = "0.1.0"
+description = "Energy-aware compilation pipeline for C/C++ workloads"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Dilraj", email = "cosdilraj07@gmail.com"},
+]
+dependencies = [
+    "psutil>=5.9",
+    "Flask>=3.0",
+    "flask-cors>=4.0",
+]
+
+[project.scripts]
+petal = "petal.cli:main"
+petal-server = "petal.server:main"
+
+[tool.setuptools.packages.find]
+include = ["petal*", "backend*"]

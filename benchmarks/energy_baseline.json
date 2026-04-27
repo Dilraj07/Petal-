@@ -1,0 +1,40 @@
+{
+  "tool": "petal",
+  "version": "0.1.0",
+  "timestamp_utc": "2026-04-27T14:00:00Z",
+  "source_file": "data/matrix_mult.c",
+  "policy": "balanced",
+  "hotspot_detected": true,
+  "hotspot_confidence": 0.9,
+  "baseline": {
+    "energy_j": 20.0,
+    "runtime_s": 0.45,
+    "runs": 3
+  },
+  "optimised": {
+    "energy_j": 12.0,
+    "runtime_s": 0.28,
+    "runs": 3
+  },
+  "comparison": {
+    "energy_delta_j": 8.0,
+    "energy_delta_pct": -40.0
+  },
+  "collector": {
+    "requested": "auto",
+    "used": "synthetic",
+    "fallback_used": false,
+    "confidence": "low",
+    "note": "Energy numbers are derived from a synthetic CPU-time model.",
+    "quality_label": "source: synthetic, quality: estimated ±35%"
+  },
+  "measurement": {
+    "energy_domain": null,
+    "unit": "joules-est",
+    "is_estimate": true
+  },
+  "correctness": {
+    "passed": true,
+    "method": "stdout_hash_sha256"
+  }
+}

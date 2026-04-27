@@ -24,6 +24,10 @@ class TestCliHelpers(unittest.TestCase):
         self.assertEqual(cli._fmt_time(0.2), "200.0 ms")
         self.assertEqual(cli._fmt_time(2.5), "2.500 s")
 
+    def test_fmt_time_rounding_behavior_for_microseconds(self):
+        self.assertEqual(cli._fmt_time(0.0000014), "1 µs")
+        self.assertEqual(cli._fmt_time(0.0000016), "2 µs")
+
     def test_quality_tag_for_high_and_estimated(self):
         self.assertEqual(
             cli._quality_tag({"used": "rapl", "confidence": "high"}),

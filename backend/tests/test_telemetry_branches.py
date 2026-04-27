@@ -15,6 +15,18 @@ import core.telemetry as telemetry
 
 
 class TestTelemetryBranches(unittest.TestCase):
+    @staticmethod
+    def _collector_class(name: str, available: bool):
+        class _Collector:
+            confidence_tier = "high"
+            note = ""
+
+            def is_available(self):
+                return available
+
+        _Collector.name = name
+        return _Collector
+
     def test_high_confidence_collectors_report_hardware_quality(self):
         self.assertIn("quality: hardware", telemetry.RaplTelemetryCollector().quality_label)
 
@@ -31,25 +43,11 @@ class TestTelemetryBranches(unittest.TestCase):
             self.assertTrue(metrics["collector"]["fallback_used"])
 
     def test_resolve_collector_auto_uses_first_available_in_priority_order(self):
-        class Unavailable:
-            name = "unavailable"
-            confidence_tier = "high"
-            note = ""
-
-            def is_available(self):
-                return False
-
-        class Available:
-            name = "available"
-            confidence_tier = "high"
-            note = ""
-
-            def is_available(self):
-                return True
-
+        unavailable = self._collector_class("unavailable", available=False)
+        available = self._collector_class("available", available=True)
         with patch.dict(
             telemetry.COLLECTORS,
-            {"amd_uprof": Unavailable, "rapl": Available, "perf_stat": Unavailable},
+            {"amd_uprof": unavailable, "rapl": available, "perf_stat": unavailable},
             clear=False,
         ):
             collector, requested = telemetry.resolve_collector("auto")

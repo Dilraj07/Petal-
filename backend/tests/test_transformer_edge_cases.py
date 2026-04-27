@@ -24,6 +24,7 @@ int main() {
         transformed = apply_loop_tiling(source)
         self.assertIn("int blockSize = 64", transformed)
         self.assertIn("for (int x = 0; x < N; x++)", transformed)
+        self.assertNotIn("for(int i=0; i<N; i+=64)", transformed)
 
     def test_rewrite_preserves_non_loop_index_identifiers(self):
         source = """#define N 8
@@ -41,6 +42,8 @@ int main() {
 """
         transformed = apply_loop_tiling(source)
         self.assertIn("C[i_index][jj] += A[ii][kk] * B[kk][jj];", transformed)
+        self.assertIn("i_index", transformed)
+        self.assertNotIn("ii_index", transformed)
 
 
 if __name__ == "__main__":

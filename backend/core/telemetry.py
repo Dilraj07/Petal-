@@ -142,20 +142,20 @@ class AmdUprofTelemetryCollector(BaseTelemetryCollector):
                 "energy_j": joules,
                 "stdout": process.stdout,
                 "stderr": process.stderr,
-                "exit_code": process.returncode
+                "exit_code": process.returncode,
+                "_collector_info": {"fell_back": False}
             }
         else:
-            # Fallback to synthetic if parsing fails
+            # Fallback to synthetic if parsing fails - do NOT mutate self
             logger.warning("AMDuProfCLI output parsing failed. Falling back to synthetic estimation.")
-            self.confidence_tier = "low"
-            self.note = "Fallback to synthetic: AMDuProfCLI output could not be parsed."
             fallback_joules = wall_time * ESTIMATED_TDP_WATTS * 0.5  # 50% avg load guess
             return {
                 "runtime_s": wall_time,
                 "energy_j": fallback_joules,
                 "stdout": process.stdout,
                 "stderr": process.stderr,
-                "exit_code": process.returncode
+                "exit_code": process.returncode,
+                "_collector_info": {"fell_back": True, "reason": "AMDuProfCLI output parsing failed"}
             }
 
 
@@ -409,8 +409,19 @@ def profile_binary(executable_path: str, collector_name: str = "auto") -> dict:
     result = collector.collect(executable_path)
 
     fallback_used = collector.name == "synthetic" and requested not in ("synthetic", "auto")
+    
+    # Check if collector fell back internally (e.g., parsing failed)
+    collector_info = result.pop("_collector_info", {})
+    if collector_info.get("fell_back"):
+        fallback_used = True
+        logger.warning("Collector fell back to estimation", reason=collector_info.get("reason"))
+    
+    # Adjust confidence if fallback was used
+    confidence_tier = collector.confidence_tier
+    if fallback_used:
+        confidence_tier = "low"
 
-    is_est = collector.confidence_tier == "low"
+    is_est = confidence_tier == "low"
     payload = {
         "runtime_s": result["runtime_s"],
         "energy_j": result["energy_j"],
@@ -421,9 +432,9 @@ def profile_binary(executable_path: str, collector_name: str = "auto") -> dict:
             "requested": requested,
             "used": collector.name,
             "fallback_used": fallback_used,
-            "confidence": collector.confidence_tier,
+            "confidence": confidence_tier,
             "note": collector.note,
-            "quality_label": collector.quality_label,
+            "quality_label": ("source: {}, quality: hardware".format(collector.name) if confidence_tier == "high" else "source: {}, quality: estimated ±35%".format(collector.name)),
         },
         "measurement": {
             "energy_domain": None if is_est else "package",

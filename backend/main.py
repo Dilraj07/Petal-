@@ -5,6 +5,7 @@ import subprocess
 import time
 import hashlib
 import statistics
+import shutil
 
 from core.analyzer import analyze_energy_hotspots
 from core.policy import POLICY_CONFIGS, decide_transformation, normalize_policy
@@ -43,10 +44,14 @@ def _tdp_advisory(tdp_arg, energy_stats, runtime_stats):
     return advisory
 
 def run_pipeline(file_path, optimize="speed", policy="balanced", collector="auto", tdp_arg=None, runs=1, emit_report=False, output_dir="./out", output_bin=None, metadata_file=None):
+    # Validate GCC is available
+    if not shutil.which("gcc"):
+        raise RuntimeError("GCC compiler not found. Please install GCC or ensure it is in your PATH.")
+    
     policy_name = normalize_policy(policy)
     policy_cfg = POLICY_CONFIGS[policy_name]
 
-    logger.info("Initializing LLVM 22.0 Frontend (Prototype)...")
+    logger.info("Initializing Energy-Aware Compilation Pipeline...")
     logger.info("Reading source file", file_path=file_path)
     logger.info("Policy profile and Collector", policy=policy_name, collector=collector)
 
@@ -149,6 +154,10 @@ def run_pipeline(file_path, optimize="speed", policy="balanced", collector="auto
                         of.write(json.dumps(_or) + "\n")
 
         # Gather standard pipeline stats...
+        if not baseline_runs:
+            logger.error("No baseline profiling results collected")
+            raise RuntimeError("Baseline profiling failed: no results collected")
+        
         base_runtimes = [r["runtime_s"] for r in baseline_runs]
         base_energies = [r["energy_j"] for r in baseline_runs]
         opt_runtimes = [r["runtime_s"] for r in optimized_runs] if apply_opt else []

@@ -10,6 +10,17 @@ class PolicyConfig:
     min_hotspot_confidence: float
     optimized_flags: tuple[str, ...]
     baseline_flags: tuple[str, ...]
+    
+    def __post_init__(self):
+        """Validate policy configuration at instantiation time."""
+        if not self.name or self.name not in VALID_POLICIES:
+            raise ValueError(f"Invalid policy name: {self.name}. Must be one of {VALID_POLICIES}")
+        if not (0 <= self.min_hotspot_confidence <= 1):
+            raise ValueError(f"min_hotspot_confidence must be between 0 and 1, got {self.min_hotspot_confidence}")
+        if not self.baseline_flags:
+            raise ValueError(f"baseline_flags cannot be empty for policy {self.name}")
+        if not self.optimized_flags:
+            raise ValueError(f"optimized_flags cannot be empty for policy {self.name}")
 
 
 POLICY_CONFIGS = {

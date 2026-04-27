@@ -10,6 +10,7 @@ def main():
     parser.add_argument("file", help="Source C file to compile")
     parser.add_argument("--optimize", help="Optimization target (e.g., energy)", default="speed")
     parser.add_argument("--tdp", help="Thermal Design Power target (e.g., 15W)", default=None)
+    parser.add_argument("--output-bin", help="Output binary path override", default=None)
     args = parser.parse_args()
 
     print(f"[\033[92mPetal\033[0m] Initializing LLVM 22.0 Frontend (Prototype)...")
@@ -38,13 +39,14 @@ def main():
             optimized_code = apply_loop_tiling(source_code)
             
             # Save optimized code
-            opt_file = args.file.replace(".c", "_optimized.c")
+            root, ext = os.path.splitext(args.file)
+            opt_file = f"{root}_optimized{ext or '.c'}"
             with open(opt_file, "w", encoding="utf-8") as f:
                 f.write(optimized_code)
             
             # Compile optimized code
-            out_bin = "petal_out"
-            if os.name == 'nt':
+            out_bin = args.output_bin or "petal_out"
+            if os.name == 'nt' and not out_bin.lower().endswith(".exe"):
                 out_bin += ".exe"
             print(f"[\033[92mPetal\033[0m] LOWERING: Generating optimized binary './{out_bin}'")
             try:
@@ -52,7 +54,8 @@ def main():
                 
                 # 3. Telemetry Profiling
                 print()
-                exec_time, joules = profile_binary(f"./{out_bin}")
+                executable_path = out_bin if os.path.isabs(out_bin) else f"./{out_bin}"
+                exec_time, joules = profile_binary(executable_path)
                 print(f"   -> Execution Time: {exec_time:.4f} seconds")
                 print(f"   -> Estimated Energy: {joules:.2f} Joules\n")
             except Exception as e:
@@ -62,13 +65,15 @@ def main():
         else:
             print("[\033[92mPetal\033[0m] No energy hotspots detected. Standard compilation.")
             try:
-                subprocess.run(["gcc", "-O3", args.file, "-o", "a.out"])
+                out_bin = args.output_bin or "a.out"
+                subprocess.run(["gcc", "-O3", args.file, "-o", out_bin])
             except:
                 pass
     else:
         print("Standard compilation...")
         try:
-            subprocess.run(["gcc", args.file, "-o", "a.out"])
+            out_bin = args.output_bin or "a.out"
+            subprocess.run(["gcc", args.file, "-o", out_bin])
         except:
             pass
 

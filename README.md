@@ -1,149 +1,87 @@
 # Petal
+Petal is a prototype energy-aware compilation demo for C matrix multiplication workloads. It includes:
+- A Python backend pipeline that detects nested-loop hotspots, rewrites code with loop tiling, compiles with GCC, and estimates energy from runtime CPU load.
+- A Flask server that streams pipeline logs via Server-Sent Events (SSE).
+- A static frontend report/demo page.
 
-**An Energy-Aware, Hardware-in-the-Loop Compiler Plugin for C/C++**
+## Current architecture
+The backend flow is:
+1. Read source C file.
+2. Detect O(N³)-style nested loop patterns (`backend/core/analyzer.py`).
+3. Apply source-to-source loop tiling via string rewriting (`backend/core/transformer.py`).
+4. Compile with GCC and run telemetry sampling (`backend/core/telemetry.py`).
+5. Stream progress to frontend (`backend/server.py`).
 
----
-
-## Overview
-
-Modern compilers optimize for execution speed or binary size, but they are entirely blind to the **physical energy consumption** of the silicon. As the industry scales toward massive AI data centers and edge IoT deployments, this "energy blind spot" results in massive, unnecessary power draw.
-
-**Petal** bridges the gap between software engineers and hardware efficiency. It is an intelligent compilation pipeline that **profiles code using real-time AMD hardware telemetry**, **predicts energy costs via machine learning**, and **automatically transforms power-hungry LLVM Intermediate Representation (IR) into low-power equivalents**.
-
----
-
-## Product Demo
-
-Check out the product demo video below:
-
-<video src="frontend/assets/demo.mov" width="800" controls></video>
-
----
-
-## The Architecture
-
-Petal operates on a closed-loop **"Shift-Left" power optimization pipeline**, catching energy bloat at compile-time.
-
-```mermaid
-flowchart LR
-    %% Styles
-    classDef actorPanel fill:#f8fafc,stroke:#cbd5e1,stroke-width:2px,rx:10px,ry:10px;
-    classDef systemPanel fill:#f0fdf4,stroke:#bbf7d0,stroke-width:2px,rx:10px,ry:10px;
-    classDef nodeItem fill:none,stroke:none,font-weight:bold,color:#1e293b;
-    classDef outputBox fill:#e2e8f0,stroke:#64748b,stroke-width:2px,color:#1e293b,font-weight:bold,rx:5px,ry:5px;
-
-    subgraph Dev [Developer Environment]
-        direction TB
-        D1[1. Inputs Source Code]:::nodeItem
-        D2[2. Configures Build Flags]:::nodeItem
-        D3[3. Reviews Energy Remarks]:::nodeItem
-        D4[4. Deploys Binary]:::nodeItem
-    end
-
-    subgraph Petal [Petal System]
-        direction TB
-        P_A[A. Injects IR Tracking Markers]:::nodeItem
-        P_B[B. Collects AMD uProf Telemetry]:::nodeItem
-        P_C[C. Predicts Energy via XGBoost]:::nodeItem
-        P_D[D. Rewrites Inefficient Instructions]:::nodeItem
-
-        P_A --> P_B
-        P_B --> P_C
-        P_C --> P_D
-    end
-
-    Final[Final Optimized Binary]:::outputBox
-
-    D1 ===> P_A
-    D2 ===> Petal
-    P_D ===> D3
-    P_D ==> Final
-    Final ==> D4
-
-    class Dev actorPanel
-    class Petal systemPanel
+## Repository structure
+```text
+.
+├── backend/
+│   ├── core/
+│   │   ├── analyzer.py
+│   │   ├── telemetry.py
+│   │   └── transformer.py
+│   ├── main.py
+│   ├── petal_build.py
+│   ├── server.py
+│   ├── requirements.txt
+│   ├── src/
+│   │   ├── target_naive.c
+│   │   └── target_petal.c
+│   └── tests/
+│       └── test_pipeline_core.py
+├── data/
+│   ├── matrix_mult.c
+│   ├── matrix_mult_optimized.c
+│   └── test_workloads/
+└── frontend/
+    ├── assets/
+    └── report/
+        └── index.html
 ```
 
----
-
-## Key Features
-
-- **Hardware-in-the-Loop Telemetry:** Uses physical silicon feedback via AMD uProf (and Linux RAPL) rather than theoretical heuristics to measure true electrical cost.
-
-- **Predictive ML Engine:** An XGBoost model, accelerated locally on the AMD Ryzen AI NPU, maps power spikes to specific LLVM IR blocks to create an "Energy Cost Dictionary."
-
-- **Custom LLVM Green Pass:** Automatically swaps inefficient instruction sequences (e.g., cache-thrashing loops) with mathematically equivalent, cache-friendly structures.
-
-- **LLVM Energy Remarks:** Educates developers by flagging specific lines of C/C++ source code that draw disproportionate wattage.
-
-- **Automated ESG Compliance:** Generates a visual HTML dashboard proving the exact Joules saved per execution, seamlessly integrating into modern CI/CD pipelines.
-
----
-
-## Technology Stack
-
-| Layer                       | Technologies                     |
-| --------------------------- | -------------------------------- |
-| **Compiler Infrastructure** | LLVM 22+, Clang (C/C++), ClangIR |
-| **Machine Learning**        | Python, XGBoost                  |
-| **Hardware Telemetry**      | AMD uProf CLI, Linux `perf`      |
-| **Reporting**               | HTML5, Tailwind CSS, Chart.js    |
-
----
-
-## Repository Structure
-
-```
-petal-hackathon/
-│
-├── petal_build.py          # Core Python CLI wrapper & ML simulation engine
-├── README.md               # Project documentation
-│
-├── src/
-│   ├── target_naive.c      # Standard, high-power C algorithm (Baseline)
-│   └── target_petal.c      # Cache-friendly, low-power C algorithm (Target)
-│
-└── report/
-    ├── index.html          # Dynamic Tailwind/Chart.js energy dashboard
-    └── petal_out           # Final compiled executable
-```
-
----
-
-## Quick Start (Demo MVP)
-
-This repository contains the **Minimum Viable Product (MVP)** designed to demonstrate the Petal pipeline and visualization dashboard.
-
-### 1. Prerequisites
-
-Ensure you have **Python 3.x** and **GCC** installed on your system.
-
-### 2. Standard Compilation (Baseline)
-
-To compile a file normally without energy optimizations, run:
-
+## Setup
+Install dependencies:
 ```bash
-python petal_build.py src/target_naive.c --optimize=speed
+python3 -m pip install -r backend/requirements.txt
 ```
 
-This will utilize the standard GCC pipeline and output an unoptimized binary.
+Required tools:
+- Python 3.x
+- GCC
 
-### 3. Petal Energy Compilation
-
-To invoke the Petal hardware-aware pipeline, use the `energy` flag:
-
+## CLI usage
+Canonical CLI entrypoint:
 ```bash
-python petal_build.py src/target_naive.c --optimize=energy
+python3 backend/main.py backend/src/target_naive.c --optimize=energy
 ```
 
-**What happens under the hood:**
+Wrapper entrypoint (delegates to `main.py`):
+```bash
+python3 backend/petal_build.py backend/src/target_naive.c --optimize=energy
+```
 
-1. The CLI initializes the LLVM frontend and generates IR.
-2. It simulates a telemetry pass against AMD uProf metrics.
-3. It queries the local ML model to identify inefficient loop nesting.
-4. It applies the `PetalEnergyOptimizationPass` to lower the power footprint.
-5. It generates a detailed HTML report.
+Optional flags:
+- `--tdp=15W` (informational hardware budget messaging)
+- `--output-bin=<path>` (override output binary location)
 
-### 4. View Results
+## Run the web demo
+Start the backend server:
+```bash
+python3 backend/server.py
+```
 
-Navigate to the `report/` directory and open `index.html` in any modern web browser to view the side-by-side analysis of **Execution Time (Seconds)** vs. **Energy Consumed (Joules)**.
+Then open:
+- `http://127.0.0.1:5000/`
+
+The `/compile` endpoint accepts source code, runs the backend pipeline, and streams logs/events to the frontend.
+
+## Tests
+Run backend unit tests:
+```bash
+python3 -m unittest discover -s backend/tests -p "test_*.py"
+```
+
+## Notes and limitations
+- Energy numbers are currently estimated using CPU utilization and a fixed TDP constant, not direct hardware power counters.
+- The transformation pass is heuristic and depends on recognizable loop structure.
+- This is a prototype/demo codebase and not a production compiler plugin.

@@ -26,6 +26,8 @@ def compile_code():
     source_code = data.get('source_code', '')
     tdp = data.get('tdp', None)
     optimize = data.get('optimize', 'energy')
+    policy = data.get('policy', 'balanced')
+    collector = data.get('collector', 'auto')
     
     # Save the incoming source code to a file
     test_dir = os.path.join(BASE_DIR, "data", "test_workloads")
@@ -39,6 +41,7 @@ def compile_code():
         root, _ = os.path.splitext(test_file)
         opt_file = f"{root}_optimized.c"
         output_bin = f"{root}_petal_out"
+        metadata_file = f"{root}_run_metadata.json"
         if os.name == "nt":
             output_bin += ".exe"
         cmd = [
@@ -47,7 +50,10 @@ def compile_code():
             main_py,
             test_file,
             f"--optimize={optimize}",
+            f"--policy={policy}",
+            f"--collector={collector}",
             f"--output-bin={output_bin}",
+            f"--metadata-file={metadata_file}",
         ]
         if tdp:
             cmd.append(f"--tdp={tdp}")
@@ -72,10 +78,14 @@ def compile_code():
                     opt_code = f.read()
                 # Encode optimized code so it doesn't break SSE framing
                 yield f"event: optimized_code\ndata: {json.dumps({'code': opt_code})}\n\n"
+            if os.path.exists(metadata_file):
+                with open(metadata_file, "r", encoding="utf-8") as f:
+                    metadata = json.load(f)
+                yield f"event: run_metadata\ndata: {json.dumps(metadata)}\n\n"
         finally:
             if process and process.poll() is None:
                 process.kill()
-            for path in (test_file, opt_file, output_bin):
+            for path in (test_file, opt_file, output_bin, metadata_file):
                 if os.path.exists(path):
                     try:
                         os.remove(path)

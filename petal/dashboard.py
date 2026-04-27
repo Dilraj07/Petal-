@@ -256,6 +256,11 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
             const deltaPct = run.comparison?.energy_delta_pct || 0;
             const collector = run.collector?.used || 'unknown';
             
+            let collectorHtml = `<span class="badge badge-blue">${collector}</span>`;
+            if (run.measurement?.is_estimate || run.collector?.confidence === 'low') {
+                collectorHtml += `<div style="margin-top: 0.25rem;"><span class="badge badge-red" style="font-size: 0.65rem;" title="Energy is estimated from CPU utilization and a fixed TDP constant. Relative trends may be meaningful, but absolute values are not hardware-verified.">Estimated telemetry (Confidence: low)</span></div>`;
+            }
+
             if (deltaPct < 0) {
                 totalPct += deltaPct;
                 validPctCount++;
@@ -269,7 +274,7 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
                 <td>${fmtJ(baseJ)}</td>
                 <td>${fmtJ(optJ)}</td>
                 <td>${deltaHtml}</td>
-                <td><span class="badge badge-blue">${collector}</span></td>
+                <td>${collectorHtml}</td>
             `;
             tbody.appendChild(tr);
         });

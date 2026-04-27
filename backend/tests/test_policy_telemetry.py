@@ -93,7 +93,7 @@ class TestPolicyAndTelemetry(unittest.TestCase):
         collector, requested = resolve_collector("auto")
         self.assertEqual(requested, "auto")
         # Should always return a valid collector (synthetic at minimum)
-        self.assertIn(collector.name, ("synthetic", "rapl", "perf_stat", "amd_uprof"))
+        self.assertIn(collector.name, ("synthetic", "apple_io", "intel_pcm", "rapl", "perf_stat", "amd_uprof"))
 
     def test_synthetic_quality_label_contains_estimated(self):
         from core.telemetry import SyntheticCpuTelemetryCollector
@@ -102,7 +102,7 @@ class TestPolicyAndTelemetry(unittest.TestCase):
 
     def test_auto_priority_order(self):
         from core.telemetry import _AUTO_PRIORITY
-        self.assertEqual(_AUTO_PRIORITY, ("amd_uprof", "rapl", "perf_stat"))
+        self.assertEqual(_AUTO_PRIORITY, ("apple_io", "intel_pcm", "amd_uprof", "rapl", "perf_stat"))
 
 
 if __name__ == "__main__":

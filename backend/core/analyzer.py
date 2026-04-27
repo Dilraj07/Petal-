@@ -1,7 +1,10 @@
 import re
+import structlog
+
+logger = structlog.get_logger("analyzer")
 
 def analyze_energy_hotspots(source_code):
-    print("[\033[94mPetal Analyzer\033[0m] Scanning Abstract Syntax Tree (AST) patterns...")
+    logger.info("Scanning Abstract Syntax Tree (AST) patterns...")
     
     # Detects at least three ordered for-loops in the same region.
     # This intentionally supports both braced and unbraced coding styles.
@@ -12,8 +15,7 @@ def analyze_energy_hotspots(source_code):
     
     match = nested_loop_pattern.search(source_code)
     if match:
-        print("[\033[93mWARNING\033[0m] Inefficient O(N^3) memory access pattern detected.")
-        print("   -> Reason: High cache-miss rate predicted (Stride length exceeds L1 cache).")
+        logger.warning("Inefficient O(N^3) memory access pattern detected.", reason="High cache-miss rate predicted (Stride length exceeds L1 cache).")
         return True
     
     return False

@@ -10,6 +10,9 @@ from core.analyzer import analyze_energy_hotspots
 from core.policy import POLICY_CONFIGS, decide_transformation, normalize_policy
 from core.transformer import apply_loop_tiling
 from core.telemetry import profile_binary
+import structlog
+
+logger = structlog.get_logger("main")
 
 def calculate_stats(data_list):
     if not data_list:
@@ -36,61 +39,48 @@ def _tdp_advisory(tdp_arg, energy_stats, runtime_stats):
         f"TDP Budget: {tdp_w:.0f}W | "
         f"Estimated avg power: {avg_power:.2f}W → {status}"
     )
-    print(f"[\033[92mPetal\033[0m] {advisory}")
+    logger.info(advisory)
     return advisory
 
-def main():
-    parser = argparse.ArgumentParser(description="Petal Energy-Aware Compiler (Heuristic Prototype)")
-    parser.add_argument("file", help="Source C file to compile")
-    parser.add_argument("--optimize", help="Optimization target (e.g., energy)", default="speed")
-    parser.add_argument("--tdp", help="Thermal Design Power target (e.g., 15W)", default=None)
-    parser.add_argument("--output-bin", help="Output binary path override", default=None)
-    parser.add_argument("--policy", help="Optimization policy profile: eco|balanced|perf", default="balanced")
-    parser.add_argument("--collector", help="Telemetry collector: auto|synthetic|amd_uprof|rapl", default="auto")
-    parser.add_argument("--metadata-file", help="Run metadata JSON output path override", default=None)
-    parser.add_argument("--runs", type=int, help="Number of times to run each binary", default=1)
-    parser.add_argument("--emit-report", action="store_true", help="Emit full artifact report")
-    parser.add_argument("--output-dir", help="Output directory for artifacts", default="./out")
-    args = parser.parse_args()
-    
-    policy_name = normalize_policy(args.policy)
+def run_pipeline(file_path, optimize="speed", policy="balanced", collector="auto", tdp_arg=None, runs=1, emit_report=False, output_dir="./out", output_bin=None, metadata_file=None):
+    policy_name = normalize_policy(policy)
     policy_cfg = POLICY_CONFIGS[policy_name]
 
-    print(f"[\033[92mPetal\033[0m] Initializing LLVM 22.0 Frontend (Prototype)...")
-    print(f"[\033[92mPetal\033[0m] Reading source file: {args.file}")
-    print(f"[\033[92mPetal\033[0m] Policy profile: {policy_name} | Collector: {args.collector}")
+    logger.info("Initializing LLVM 22.0 Frontend (Prototype)...")
+    logger.info("Reading source file", file_path=file_path)
+    logger.info("Policy profile and Collector", policy=policy_name, collector=collector)
 
-    if not os.path.exists(args.file):
-        print(f"Error: {args.file} not found.")
-        return
+    if not os.path.exists(file_path):
+        logger.error("File not found", file_path=file_path)
+        raise FileNotFoundError(f"File not found: {file_path}")
 
-    with open(args.file, "r", encoding="utf-8", errors="replace") as f:
+    with open(file_path, "r", encoding="utf-8", errors="replace") as f:
         source_code = f.read()
 
     # Make output dir if emitting report
-    out_dir = args.output_dir if args.emit_report else os.path.dirname(args.file)
-    if args.emit_report and not os.path.exists(out_dir):
+    out_dir = output_dir if emit_report else os.path.dirname(file_path)
+    if emit_report and not os.path.exists(out_dir):
         os.makedirs(out_dir, exist_ok=True)
 
-    if args.optimize == "energy":
-        print("\n[\033[93mTELEMETRY\033[0m] Initiating Core Pipeline...")
+    if optimize == "energy":
+        logger.info("Initiating Core Pipeline...")
         run_started_at = time.time()
         
         has_hotspot = analyze_energy_hotspots(source_code)
         hotspot_confidence = 0.9 if has_hotspot else 0.0
         decision = decide_transformation(has_hotspot, policy_name, hotspot_confidence)
-        print(f"[\033[92mPetal\033[0m] Policy decision: {decision['reason']}")
+        logger.info("Policy decision", reason=decision['reason'])
         
         # Compile Baseline
         baseline_bin = os.path.join(out_dir, "baseline.bin")
         if os.name == 'nt' and not baseline_bin.lower().endswith(".exe"):
             baseline_bin += ".exe"
         try:
-            subprocess.run(["gcc", *policy_cfg.baseline_flags, args.file, "-o", baseline_bin], check=True)
-            print(f"[\033[92mPetal\033[0m] Compiled Baseline Binary: {baseline_bin}")
+            subprocess.run(["gcc", *policy_cfg.baseline_flags, file_path, "-o", baseline_bin], check=True)
+            logger.info("Compiled Baseline Binary", binary=baseline_bin)
         except Exception as e:
-            print(f"Error compiling baseline: {e}")
-            return
+            logger.error("Error compiling baseline", error=str(e))
+            raise RuntimeError(f"Error compiling baseline: {e}")
 
         opt_file = None
         optimized_bin = None
@@ -99,7 +89,7 @@ def main():
         if apply_opt:
             optimized_code = apply_loop_tiling(source_code)
             
-            root, ext = os.path.splitext(os.path.basename(args.file))
+            root, ext = os.path.splitext(os.path.basename(file_path))
             opt_file = os.path.join(out_dir, f"{root}_optimized{ext or '.c'}")
             with open(opt_file, "w", encoding="utf-8") as f:
                 f.write(optimized_code)
@@ -109,108 +99,81 @@ def main():
                 optimized_bin += ".exe"
             try:
                 subprocess.run(["gcc", *policy_cfg.optimized_flags, opt_file, "-o", optimized_bin], check=True)
-                print(f"[\033[92mPetal\033[0m] Compiled Optimized Binary: {optimized_bin}")
+                logger.info("Compiled Optimized Binary", binary=optimized_bin)
             except Exception as e:
-                print(f"Error compiling optimized: {e}")
-                return
+                logger.error("Error compiling optimized", error=str(e))
+                raise RuntimeError(f"Error compiling optimized: {e}")
 
-        print(f"[\033[92mPetal\033[0m] Running profiles ({args.runs} runs per variant)...")
+        logger.info("Running profiles", runs_per_variant=runs)
         
         baseline_runs = []
         optimized_runs = []
         
-        def run_variant(binary_path, variant_name, runs_list, jsonl_file):
-            abs_bin = binary_path if os.path.isabs(binary_path) else os.path.abspath(binary_path)
-            for i in range(args.runs):
-                res = profile_binary(abs_bin, collector_name=args.collector)
-                
-                stdout_str = res["stdout"] or ""
-                stdout_sha256 = hashlib.sha256(stdout_str.encode()).hexdigest()
-                
-                run_data = {
-                    "run_id": i + 1,
-                    "variant": variant_name,
-                    "runtime_s": res["runtime_s"],
-                    "energy_j": res["energy_j"],
-                    "stdout_sha256": stdout_sha256,
-                    "stderr_truncated": (res["stderr"] or "")[:200],
-                    "exit_code": res["exit_code"]
-                }
-                runs_list.append(run_data)
-                
-                # Emit live update for server.py
+        base_runs_file = os.path.join(out_dir, "baseline_runs.jsonl")
+        opt_runs_file = os.path.join(out_dir, "optimized_runs.jsonl")
+
+        for r_idx in range(1, runs + 1):
+            res = profile_binary(baseline_bin, collector)
+            update_evt = {
+                "variant": "baseline",
+                "run_index": r_idx,
+                "runtime_s": res["runtime_s"],
+                "energy_j": res["energy_j"],
+                "collector_used": res["collector"]["used"],
+                "confidence": res["collector"]["confidence"]
+            }
+            logger.info("run_update", run_data=update_evt)
+            baseline_runs.append(res)
+            
+        if apply_opt:
+            for r_idx in range(1, runs + 1):
+                res = profile_binary(optimized_bin, collector)
                 update_evt = {
-                    "variant": variant_name,
-                    "run_index": i + 1,
+                    "variant": "optimized",
+                    "run_index": r_idx,
                     "runtime_s": res["runtime_s"],
                     "energy_j": res["energy_j"],
                     "collector_used": res["collector"]["used"],
                     "confidence": res["collector"]["confidence"]
                 }
-                print(f"@@RUN_UPDATE@@: {json.dumps(update_evt)}")
-                
-                if args.emit_report:
-                    with open(jsonl_file, "a") as f:
-                        f.write(json.dumps(run_data) + "\n")
-                        
-            # Store the collector details to include in global metadata later
-            return res["collector"], res["measurement"]
+                logger.info("run_update", run_data=update_evt)
+                optimized_runs.append(res)
         
-        base_runs_file = os.path.join(out_dir, "baseline.runs.jsonl")
-        opt_runs_file = os.path.join(out_dir, "optimized.runs.jsonl")
-        
-        if args.emit_report:
-            # Clear old files
-            open(base_runs_file, 'w').close()
+        if emit_report:
+            with open(base_runs_file, "w") as bf:
+                for br in baseline_runs:
+                    bf.write(json.dumps(br) + "\n")
             if apply_opt:
-                open(opt_runs_file, 'w').close()
+                with open(opt_runs_file, "w") as of:
+                    for _or in optimized_runs:
+                        of.write(json.dumps(_or) + "\n")
 
-        col_details, meas_details = run_variant(baseline_bin, "baseline", baseline_runs, base_runs_file)
-        
-        if apply_opt:
-            run_variant(optimized_bin, "optimized", optimized_runs, opt_runs_file)
-
-        # Correctness check
-        correctness = {
-            "passed": True,
-            "method": "stdout_hash_sha256",
-            "mismatches": 0,
-            "total_runs_per_variant": args.runs,
-            "details": "Only baseline ran."
-        }
-        
-        if apply_opt:
-            mismatches = 0
-            for i in range(args.runs):
-                base_sha = baseline_runs[i]["stdout_sha256"]
-                opt_sha = optimized_runs[i]["stdout_sha256"]
-                optimized_runs[i]["correctness"] = {
-                    "passed": base_sha == opt_sha,
-                    "method": "stdout_hash_sha256",
-                    "baseline_stdout_sha256": base_sha
-                }
-                if base_sha != opt_sha:
-                    mismatches += 1
-            
-            correctness["mismatches"] = mismatches
-            correctness["passed"] = mismatches == 0
-            if mismatches == 0:
-                correctness["details"] = "All optimized outputs matched baseline (exact hash)."
-            else:
-                correctness["details"] = f"Detected {mismatches} mismatch(es) between baseline and optimized."
-                
-        # Stats
+        # Gather standard pipeline stats...
         base_runtimes = [r["runtime_s"] for r in baseline_runs]
         base_energies = [r["energy_j"] for r in baseline_runs]
+        opt_runtimes = [r["runtime_s"] for r in optimized_runs] if apply_opt else []
+        opt_energies = [r["energy_j"] for r in optimized_runs] if apply_opt else []
+        
         base_runtime_stats = calculate_stats(base_runtimes)
         base_energy_stats = calculate_stats(base_energies)
+        opt_runtime_stats = calculate_stats(opt_runtimes)
+        opt_energy_stats = calculate_stats(opt_energies)
         
-        comparison = {}
-        if apply_opt:
-            opt_runtimes = [r["runtime_s"] for r in optimized_runs]
-            opt_energies = [r["energy_j"] for r in optimized_runs]
-            opt_runtime_stats = calculate_stats(opt_runtimes)
-            opt_energy_stats = calculate_stats(opt_energies)
+        col_details = baseline_runs[0]["collector"] if baseline_runs else {}
+        meas_details = baseline_runs[0]["measurement"] if baseline_runs else {}
+
+        comparison = None
+        correctness = {"passed": None, "note": "No optimization applied."}
+        
+        if apply_opt and baseline_runs and optimized_runs:
+            b_out_hash = hashlib.sha256(baseline_runs[0].get("stdout", "").encode()).hexdigest()
+            o_out_hash = hashlib.sha256(optimized_runs[0].get("stdout", "").encode()).hexdigest()
+            correctness = {
+                "passed": b_out_hash == o_out_hash,
+                "note": "Outputs identical." if b_out_hash == o_out_hash else "Output mismatch detected!",
+                "baseline_hash": b_out_hash,
+                "optimized_hash": o_out_hash
+            }
             
             b_e = base_energy_stats["median"]
             o_e = opt_energy_stats["median"]
@@ -238,7 +201,7 @@ def main():
             "version": "0.1.0",
             "timestamp_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "input": {
-                "source_file": args.file,
+                "source_file": file_path,
                 "deterministic": True
             },
             "policy": {
@@ -250,12 +213,12 @@ def main():
                 "compiler": "gcc",
                 "baseline_flags": " ".join(policy_cfg.baseline_flags),
                 "optimized_flags": " ".join(policy_cfg.optimized_flags) if apply_opt else None,
-                "notes": _tdp_advisory(args.tdp, base_energy_stats, base_runtime_stats)
+                "notes": _tdp_advisory(tdp_arg, base_energy_stats, base_runtime_stats)
             },
             "collector": col_details,
             "measurement": meas_details,
             "runs": {
-                "per_variant": args.runs,
+                "per_variant": runs,
                 "runtime_unit": "seconds",
                 "energy_unit": "joules"
             },
@@ -264,25 +227,63 @@ def main():
             "files": {
                 "baseline_binary": baseline_bin,
                 "optimized_binary": optimized_bin,
-                "baseline_runs_log": base_runs_file if args.emit_report else None,
-                "optimized_runs_log": opt_runs_file if args.emit_report and apply_opt else None
+                "baseline_runs_log": base_runs_file if emit_report else None,
+                "optimized_runs_log": opt_runs_file if emit_report and apply_opt else None
             }
         }
         
-        metadata_file = args.metadata_file or os.path.join(out_dir, "metadata.json")
-        with open(metadata_file, "w", encoding="utf-8") as f:
+        mf = metadata_file or os.path.join(out_dir, "metadata.json")
+        with open(mf, "w", encoding="utf-8") as f:
             json.dump(metadata, f, indent=2)
-        print(f"[\033[92mPetal\033[0m] METADATA: {metadata_file}")
+        logger.info("METADATA", metadata_file=mf)
+        
+        return metadata
         
     else:
-        print("Standard compilation...")
-        try:
-            out_bin = args.output_bin or "a.out"
-            subprocess.run(["gcc", args.file, "-o", out_bin], check=True)
-            print(f"[\033[92mPetal\033[0m] Compiled: {out_bin}")
-        except Exception as e:
-            print(f"[\033[91mError\033[0m] gcc failed: {e}")
-            raise SystemExit(1)
+        logger.info("Standard compilation...")
+        out_bin = output_bin or "a.out"
+        subprocess.run(["gcc", file_path, "-o", out_bin], check=True)
+        logger.info("Compiled", binary=out_bin)
+        return {"status": "ok", "binary": out_bin}
+
+def main():
+    parser = argparse.ArgumentParser(description="Petal Energy-Aware Compiler (Heuristic Prototype)")
+    parser.add_argument("file", help="Source C file to compile")
+    parser.add_argument("--optimize", help="Optimization target (e.g., energy)", default="speed")
+    parser.add_argument("--tdp", help="Thermal Design Power target (e.g., 15W)", default=None)
+    parser.add_argument("--output-bin", help="Output binary path override", default=None)
+    parser.add_argument("--policy", help="Optimization policy profile: eco|balanced|perf", default="balanced")
+    parser.add_argument("--collector", help="Telemetry collector: auto|synthetic|amd_uprof|rapl", default="auto")
+    parser.add_argument("--metadata-file", help="Run metadata JSON output path override", default=None)
+    parser.add_argument("--runs", type=int, help="Number of times to run each binary", default=1)
+    parser.add_argument("--emit-report", action="store_true", help="Emit full artifact report")
+    parser.add_argument("--output-dir", help="Output directory for artifacts", default="./out")
+    args = parser.parse_args()
+    
+    structlog.configure(
+        processors=[
+            structlog.processors.add_log_level,
+            structlog.processors.TimeStamper(fmt="iso"),
+            structlog.dev.ConsoleRenderer()
+        ]
+    )
+    
+    try:
+        run_pipeline(
+            file_path=args.file,
+            optimize=args.optimize,
+            policy=args.policy,
+            collector=args.collector,
+            tdp_arg=args.tdp,
+            runs=args.runs,
+            emit_report=args.emit_report,
+            output_dir=args.output_dir,
+            output_bin=args.output_bin,
+            metadata_file=args.metadata_file
+        )
+    except Exception as e:
+        logger.error("Pipeline execution failed", error=str(e))
+        raise SystemExit(1)
 
 if __name__ == "__main__":
     main()

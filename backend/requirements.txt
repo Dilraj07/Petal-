@@ -1,3 +1,8 @@
 psutil==5.9.8
 Flask==3.0.3
 Flask-Cors==4.0.0
+pyRAPL==0.2.3.1
+celery==5.3.6
+redis==5.0.3
+structlog==24.1.0
+zeus-apple-silicon

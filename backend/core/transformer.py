@@ -1,4 +1,7 @@
 import re
+import structlog
+
+logger = structlog.get_logger("transformer")
 
 BLOCK_SIZE = 64
 
@@ -39,11 +42,11 @@ def _tiled_loops(body: str) -> str:
 
 
 def apply_loop_tiling(source_code):
-    print("[\033[92mPetal Optimizer\033[0m] Applying 'Loop Tiling' transformation pass...")
+    logger.info("Applying 'Loop Tiling' transformation pass...")
 
     # Step 1: inject blockSize declaration after int main() {
     if not _MAIN_OPEN.search(source_code):
-        print("[\033[93mWARNING\033[0m] Could not locate 'int main()' — transformation skipped.")
+        logger.warning("Could not locate 'int main()' — transformation skipped.")
         return source_code
 
     result = _MAIN_OPEN.sub(
@@ -55,12 +58,11 @@ def apply_loop_tiling(source_code):
     # Step 2: replace the naive loop nest with tiled loops
     m = _NAIVE_LOOP.search(result)
     if not m:
-        print("[\033[93mWARNING\033[0m] Nested loop pattern not recognised — transformation skipped.")
-        print("   -> Tip: ensure the source uses the canonical i/j/k loop variables.")
+        logger.warning("Nested loop pattern not recognised — transformation skipped.", tip="ensure the source uses the canonical i/j/k loop variables.")
         return result
 
     tiled = _tiled_loops(m.group('body'))
     result = result[:m.start()] + tiled + result[m.end():]
 
-    print("[\033[92mPetal Optimizer\033[0m] Loop tiling applied — block size: " + str(BLOCK_SIZE))
+    logger.info("Loop tiling applied", block_size=BLOCK_SIZE)
     return result

@@ -5,6 +5,22 @@ import subprocess
 import time
 
 import psutil
+import structlog
+
+logger = structlog.get_logger("telemetry")
+
+try:
+    import pyRAPL
+    pyRAPL.setup()
+    HAS_RAPL = True
+except Exception:
+    HAS_RAPL = False
+
+try:
+    from zeus_apple_silicon import AppleEnergyMonitor
+    HAS_APPLE_IO = True
+except Exception:
+    HAS_APPLE_IO = False
 
 # Assume a standard laptop CPU has a max TDP (Thermal Design Power) of 45 Watts
 ESTIMATED_TDP_WATTS = 45.0
@@ -98,7 +114,49 @@ class AmdUprofTelemetryCollector(BaseTelemetryCollector):
         return shutil.which("AMDuProfCLI") is not None
 
     def collect(self, executable_path: str) -> dict:
-        raise NotImplementedError("AMD uProf collector adapter is not implemented yet.")
+        start_time = time.perf_counter()
+        
+        process = subprocess.run(
+            ["AMDuProfCLI", "timechart", "--event", "power", "--", executable_path],
+            capture_output=True, text=True
+        )
+        end_time = time.perf_counter()
+        wall_time = end_time - start_time
+        
+        # Try to parse output for energy
+        joules = None
+        output = process.stdout + "\n" + process.stderr
+        for line in output.splitlines():
+            if "energy" in line.lower() or "joules" in line.lower():
+                try:
+                    nums = re.findall(r"[-+]?\d*\.\d+|\d+", line)
+                    if nums:
+                        joules = float(nums[-1])
+                        break
+                except ValueError:
+                    continue
+        
+        if joules is not None:
+            return {
+                "runtime_s": wall_time,
+                "energy_j": joules,
+                "stdout": process.stdout,
+                "stderr": process.stderr,
+                "exit_code": process.returncode
+            }
+        else:
+            # Fallback to synthetic if parsing fails
+            logger.warning("AMDuProfCLI output parsing failed. Falling back to synthetic estimation.")
+            self.confidence_tier = "low"
+            self.note = "Fallback to synthetic: AMDuProfCLI output could not be parsed."
+            fallback_joules = wall_time * ESTIMATED_TDP_WATTS * 0.5  # 50% avg load guess
+            return {
+                "runtime_s": wall_time,
+                "energy_j": fallback_joules,
+                "stdout": process.stdout,
+                "stderr": process.stderr,
+                "exit_code": process.returncode
+            }
 
 
 # ---------------------------------------------------------------------------
@@ -112,45 +170,37 @@ class RaplTelemetryCollector(BaseTelemetryCollector):
     confidence_tier = "high"
     note = "Package energy via /sys/class/powercap/intel-rapl:0/energy_uj"
 
-    def is_available(self) -> bool:
-        return os.path.isfile(_RAPL_ENERGY_PATH) and os.access(_RAPL_ENERGY_PATH, os.R_OK)
+    def is_available(self):
+        return HAS_RAPL
 
-    def _read_energy_uj(self) -> int:
-        with open(_RAPL_ENERGY_PATH, "r") as f:
-            return int(f.read().strip())
-
-    def collect(self, executable_path: str) -> dict:
-        energy_before = self._read_energy_uj()
+    def collect(self, executable_path):
         start_time = time.perf_counter()
-
+        
         process = subprocess.Popen(
             [executable_path],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True
         )
+        
+        meter = pyRAPL.Measurement('rapl_meter')
+        meter.begin()
         stdout_out, stderr_out = process.communicate()
-
+        meter.end()
+        
         end_time = time.perf_counter()
-        energy_after = self._read_energy_uj()
-
         wall_time = end_time - start_time
-        # energy_uj is in micro-joules; handle counter wraparound
-        delta_uj = energy_after - energy_before
-        if delta_uj < 0:
-            # Counter wrapped around (typical max_energy_range_uj ~ 2^32)
-            try:
-                with open("/sys/class/powercap/intel-rapl:0/max_energy_range_uj", "r") as f:
-                    max_range = int(f.read().strip())
-                delta_uj += max_range
-            except (FileNotFoundError, ValueError):
-                delta_uj = abs(delta_uj)
-
-        total_joules = delta_uj / 1_000_000.0
+        
+        try:
+            # result.pkg is a list of microjoules (one per socket)
+            pkg_energy_uj = sum(meter.result.pkg)
+            energy_j = pkg_energy_uj / 1_000_000.0
+        except (AttributeError, TypeError):
+            energy_j = 0.0
 
         return {
             "runtime_s": wall_time,
-            "energy_j": total_joules,
+            "energy_j": energy_j,
             "stdout": stdout_out,
             "stderr": stderr_out,
             "exit_code": process.returncode
@@ -213,17 +263,122 @@ class PerfStatTelemetryCollector(BaseTelemetryCollector):
 
 
 # ---------------------------------------------------------------------------
+# Priority 2.1 — Apple Silicon IOReport (macOS)
+# ---------------------------------------------------------------------------
+class AppleIoTelemetryCollector(BaseTelemetryCollector):
+    name = "apple_io"
+    confidence_tier = "high"
+    note = "Hardware energy via Apple Silicon IOReport."
+
+    def is_available(self) -> bool:
+        return HAS_APPLE_IO
+
+    def collect(self, executable_path: str) -> dict:
+        monitor = AppleEnergyMonitor()
+        monitor.begin_window("run")
+        
+        start_time = time.perf_counter()
+        process = subprocess.Popen(
+            [executable_path],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        stdout_out, stderr_out = process.communicate()
+        end_time = time.perf_counter()
+        
+        m = monitor.end_window("run")
+        wall_time = end_time - start_time
+        
+        # Depending on M-series chip, sum up available fields (cpu_joules, dram_joules, gpu_joules)
+        total_joules = 0.0
+        try:
+            if hasattr(m, 'cpu_joules'): total_joules += getattr(m, 'cpu_joules')
+            if hasattr(m, 'gpu_joules'): total_joules += getattr(m, 'gpu_joules')
+            if hasattr(m, 'dram_joules'): total_joules += getattr(m, 'dram_joules')
+        except Exception:
+            pass
+
+        return {
+            "runtime_s": wall_time,
+            "energy_j": total_joules,
+            "stdout": stdout_out,
+            "stderr": stderr_out,
+            "exit_code": process.returncode
+        }
+
+
+# ---------------------------------------------------------------------------
+# Priority 2.2 — Intel PCM (Cross-platform)
+# ---------------------------------------------------------------------------
+class IntelPcmTelemetryCollector(BaseTelemetryCollector):
+    name = "intel_pcm"
+    confidence_tier = "high"
+    note = "Hardware energy via Intel PCM (pcm-power)."
+
+    def _get_pcm_exe(self) -> str | None:
+        for exe in ("pcm-power", "pcm-power.exe", "pcm-power.x"):
+            if shutil.which(exe):
+                return exe
+        return None
+
+    def is_available(self) -> bool:
+        return self._get_pcm_exe() is not None
+
+    def collect(self, executable_path: str) -> dict:
+        pcm_exe = self._get_pcm_exe()
+        
+        # Start pcm-power in background
+        pcm = subprocess.Popen(
+            [pcm_exe, "-i", "1"],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+        )
+
+        start_time = time.perf_counter()
+        process = subprocess.run(
+            [executable_path],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+        )
+        end_time = time.perf_counter()
+        wall_time = end_time - start_time
+
+        # Give pcm-power a moment to flush final samples, then terminate
+        time.sleep(1.0)
+        pcm.terminate()
+        out, _ = pcm.communicate()
+
+        joules = 0.0
+        for line in (out or "").splitlines():
+            if "Processor" in line and "Joules" in line:
+                parts = line.split()
+                try:
+                    joules = float(parts[-1])
+                except ValueError:
+                    pass
+
+        return {
+            "runtime_s": wall_time,
+            "energy_j": joules,
+            "stdout": process.stdout,
+            "stderr": process.stderr,
+            "exit_code": process.returncode
+        }
+
+
+# ---------------------------------------------------------------------------
 # Collector registry & resolution
 # ---------------------------------------------------------------------------
 COLLECTORS = {
     "synthetic": SyntheticCpuTelemetryCollector,
     "amd_uprof": AmdUprofTelemetryCollector,
+    "apple_io": AppleIoTelemetryCollector,
+    "intel_pcm": IntelPcmTelemetryCollector,
     "rapl": RaplTelemetryCollector,
     "perf_stat": PerfStatTelemetryCollector,
 }
 
 # Priority order for auto-detection (plan Layer 0)
-_AUTO_PRIORITY = ("amd_uprof", "rapl", "perf_stat")
+_AUTO_PRIORITY = ("apple_io", "intel_pcm", "amd_uprof", "rapl", "perf_stat")
 
 
 def resolve_collector(collector_name: str):
@@ -250,6 +405,7 @@ def resolve_collector(collector_name: str):
 
 def profile_binary(executable_path: str, collector_name: str = "auto") -> dict:
     collector, requested = resolve_collector(collector_name)
+    logger.info("Profiling execution", collector=collector.name, requested=requested)
     result = collector.collect(executable_path)
 
     fallback_used = collector.name == "synthetic" and requested not in ("synthetic", "auto")

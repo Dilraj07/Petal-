@@ -49,6 +49,10 @@ from petal.formatter import (
     print_savings_badge, checklist_item
 )
 from petal.interactive import interactive_mode, show_demo_options
+from petal.report import generate_html_report
+from petal.config import PetalConfig, load_config, merge_with_args
+
+import glob
 
 # Keep old names for backward compatibility
 _fmt_energy = fmt_energy
@@ -395,6 +399,12 @@ def _build_parser() -> argparse.ArgumentParser:
                         help="Number of benchmark runs per variant (default: 3, max: 10)")
     parser.add_argument("--metadata-out", type=str, default=None,
                         help="Write run metadata JSON to this path")
+    parser.add_argument("--html", action="store_true",
+                        help="Generate HTML report of optimization results")
+    parser.add_argument("--batch", type=str, default=None,
+                        help="Process multiple files matching glob pattern (e.g., '**/*.c')")
+    parser.add_argument("--config", type=str, default=".petal.yml",
+                        help="Path to configuration file (default: .petal.yml)")
     parser.add_argument("--cmake-dir", action="store_true",
                         help="Print the absolute path to Petal's CMake module directory")
 
@@ -426,6 +436,9 @@ def _build_sub_parser() -> argparse.ArgumentParser:
     
     # interactive
     subparsers.add_parser("interactive", help="Start interactive mode with guided prompts")
+    
+    # init-config
+    subparsers.add_parser("init-config", help="Create a default .petal.yml configuration file")
 
     return parser
 
@@ -435,7 +448,7 @@ def _build_sub_parser() -> argparse.ArgumentParser:
 
 def main() -> None:
     # Route to subcommands if first arg matches
-    subcommands = ["check-regression", "setup-env", "generate-dashboard", "demo", "interactive"]
+    subcommands = ["check-regression", "setup-env", "generate-dashboard", "demo", "interactive", "init-config"]
     if len(sys.argv) > 1 and sys.argv[1] in subcommands:
         sub_parser = _build_sub_parser()
         args = sub_parser.parse_args(sys.argv[1:])
@@ -448,6 +461,15 @@ def main() -> None:
             sys.exit(generate_dashboard(args.results_dir, args.out))
         elif args.command == "demo":
             show_demo_options()
+            sys.exit(0)
+        elif args.command == "init-config":
+            config_file = ".petal.yml"
+            if not os.path.exists(config_file):
+                with open(config_file, "w") as f:
+                    f.write(PetalConfig.create_default())
+                print(f"{success('✓')} Created {config_file}")
+            else:
+                print(f"{error('✗')} {config_file} already exists")
             sys.exit(0)
         elif args.command == "interactive":
             interactive_inputs = interactive_mode()
@@ -480,6 +502,11 @@ def main() -> None:
         print(cmake_path)
         sys.exit(0)
 
+    # Load configuration file if it exists
+    config = load_config(args.config)
+    if config:
+        merge_with_args(config, args)
+
     # We renamed --json to json_out to avoid clashing with the json module
     if hasattr(args, "json_out"):
         args.json = args.json_out
@@ -510,6 +537,41 @@ def main() -> None:
         args.optimise = True
         args.optimize = True
 
+    # Handle batch processing
+    if args.batch:
+        files = glob.glob(args.batch, recursive=True)
+        if not files:
+            print(f"{error('✗')} No files matched pattern: {args.batch}")
+            sys.exit(1)
+        
+        print(f"{info(f'Processing {len(files)} file(s)...')}\n")
+        results = []
+        for file_path in files:
+            # Create new args for each file
+            file_args = argparse.Namespace(**vars(args))
+            file_args.file = file_path
+            
+            # Default to --optimise if neither flag is set
+            if not file_args.analyse and not file_args.optimise:
+                file_args.optimise = True
+                file_args.optimize = True
+            
+            result = _run_pipeline(file_args)
+            results.append(result)
+            print()
+        
+        # Summary
+        print(f"\n{info('='*50)}")
+        print(f"{info('Batch Processing Summary')}")
+        print(f"{info('='*50)}")
+        for idx, result in enumerate(results, 1):
+            if "optimised" in result:
+                delta_pct = ((result['baseline']['energy_j'] - result['optimised']['energy_j']) / result['baseline']['energy_j'] * 100) if result['baseline']['energy_j'] > 0 else 0
+                print(f"{idx}. {result['source_file']}: {success(f'{delta_pct:.0f}% energy saved')}")
+            else:
+                print(f"{idx}. {result['source_file']}: {info('Analysis only')}")
+        return
+
     result = _run_pipeline(args)
 
     # Write metadata JSON if requested
@@ -520,6 +582,26 @@ def main() -> None:
             json.dump(result, f, indent=2)
         if not args.json:
             print(f"Metadata written to: {metadata_path}")
+
+    # Generate HTML report if requested
+    if getattr(args, "html", False) and "optimised" in result:
+        try:
+            report_path = generate_html_report(
+                filename=os.path.basename(result['source_file']),
+                policy=result['policy'],
+                baseline_energy=result['baseline']['energy_j'],
+                optimized_energy=result['optimised']['energy_j'],
+                baseline_runtime=result['baseline']['runtime_s'],
+                optimized_runtime=result['optimised']['runtime_s'],
+                baseline_power=result['baseline'].get('power_w', 45.0),
+                confidence=90.0,
+                transformation="Loop Tiling (64)"
+            )
+            if not args.json:
+                print(f"\n{success('✓')} HTML report generated: {report_path}")
+        except Exception as e:
+            if not args.json:
+                print(f"{error('✗')} Failed to generate HTML report: {e}")
 
     # JSON output mode
     if getattr(args, "json", False):

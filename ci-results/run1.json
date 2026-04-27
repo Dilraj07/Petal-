@@ -1,0 +1,46 @@
+{
+  "tool": "petal",
+  "version": "0.1.0",
+  "timestamp_utc": "2026-04-27T15:07:20Z",
+  "source_file": "C:\\Users\\Dillu\\Desktop\\EL\\Petal\\petal-hackathon\\data\\matrix_mult.c",
+  "policy": "balanced",
+  "hotspot_detected": true,
+  "hotspot_confidence": 0.9,
+  "transform_decision": {
+    "apply_transform": true,
+    "reason": "balanced policy approved transformation.",
+    "policy": "balanced"
+  },
+  "baseline": {
+    "energy_j": 14.084779500003606,
+    "runtime_s": 0.31299510000008013,
+    "runs": 3
+  },
+  "collector": {
+    "requested": "auto",
+    "used": "synthetic",
+    "fallback_used": false,
+    "confidence": "low",
+    "note": "Energy numbers are derived from a synthetic CPU-time model, not from a hardware Joule counter.",
+    "quality_label": "source: synthetic, quality: estimated \u00b135%"
+  },
+  "measurement": {
+    "energy_domain": null,
+    "unit": "joules-est",
+    "is_estimate": true
+  },
+  "optimised": {
+    "energy_j": 11.071246500000598,
+    "runtime_s": 0.24602770000001328,
+    "runs": 3
+  },
+  "comparison": {
+    "energy_delta_j": 3.013533,
+    "energy_delta_pct": 21.4
+  },
+  "correctness": {
+    "passed": true,
+    "method": "stdout_hash_sha256"
+  },
+  "output_file": "C:\\Users\\Dillu\\Desktop\\EL\\Petal\\petal-hackathon\\data\\matrix_mult_green.c"
+}

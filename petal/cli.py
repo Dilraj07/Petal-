@@ -318,6 +318,13 @@ def _check_regression(args: argparse.Namespace) -> None:
 # Argument parser
 # ---------------------------------------------------------------------------
 
+from petal.dashboard import generate_dashboard
+from petal.env import setup_telemetry_environment
+
+# ---------------------------------------------------------------------------
+# Argument parser
+# ---------------------------------------------------------------------------
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="petal",
@@ -325,7 +332,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--version", action="version", version=f"petal {__version__}")
 
-    # To support both `petal <file>` and `petal check-regression`, we check argv manually below.
+    # To support both `petal <file>` and subcommands, we check argv manually below.
     # Here we define the arguments for the default file-processing mode.
     parser.add_argument("file", nargs="?", help="Source C/C++ file to process")
     parser.add_argument("--analyse", "--analyze", action="store_true",
@@ -346,45 +353,63 @@ def _build_parser() -> argparse.ArgumentParser:
                         help="Number of benchmark runs per variant (default: 3, max: 10)")
     parser.add_argument("--metadata-out", type=str, default=None,
                         help="Write run metadata JSON to this path")
+    parser.add_argument("--cmake-dir", action="store_true",
+                        help="Print the absolute path to Petal's CMake module directory")
 
     return parser
 
 
-def _build_check_parser() -> argparse.ArgumentParser:
-    check_parser = argparse.ArgumentParser(
-        prog="petal check-regression",
-        description="CI gate: compare current run against stored baseline"
-    )
-    check_parser.add_argument("--result", required=True,
-                              help="Path to current run's metadata JSON")
-    check_parser.add_argument("--baseline", required=True,
-                              help="Path to baseline metadata JSON")
-    check_parser.add_argument("--threshold", type=float, default=5.0,
-                              help="Max allowable energy regression %% (default: 5)")
-    check_parser.add_argument("--telemetry-required", type=str, default="any",
-                              choices=["hardware", "any"],
-                              help="Require hardware telemetry to enforce gate")
-    return check_parser
+def _build_sub_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="petal")
+    subparsers = parser.add_subparsers(dest="command")
+
+    # check-regression
+    check_p = subparsers.add_parser("check-regression", help="CI gate: compare current run against stored baseline")
+    check_p.add_argument("--result", required=True, help="Path to current run's metadata JSON")
+    check_p.add_argument("--baseline", required=True, help="Path to baseline metadata JSON")
+    check_p.add_argument("--threshold", type=float, default=5.0, help="Max allowable energy regression %% (default: 5)")
+    check_p.add_argument("--telemetry-required", type=str, default="any", choices=["hardware", "any"],
+                         help="Require hardware telemetry to enforce gate")
+
+    # setup-env
+    subparsers.add_parser("setup-env", help="Configure Linux system for hardware telemetry (requires sudo)")
+
+    # generate-dashboard
+    dash_p = subparsers.add_parser("generate-dashboard", help="Generate a static HTML dashboard from JSON results")
+    dash_p.add_argument("--results-dir", required=True, help="Directory containing petal_result.json files")
+    dash_p.add_argument("--out", default="petal_dashboard.html", help="Output path for the HTML file")
+
+    return parser
 
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 
 def main() -> None:
-    # Route to subcommand
-    if len(sys.argv) > 1 and sys.argv[1] == "check-regression":
-        check_parser = _build_check_parser()
-        args = check_parser.parse_args(sys.argv[2:])
-        args.command = "check-regression"
-        _check_regression(args)
+    # Route to subcommands if first arg matches
+    subcommands = ["check-regression", "setup-env", "generate-dashboard"]
+    if len(sys.argv) > 1 and sys.argv[1] in subcommands:
+        sub_parser = _build_sub_parser()
+        args = sub_parser.parse_args(sys.argv[1:])
+        
+        if args.command == "check-regression":
+            _check_regression(args)
+        elif args.command == "setup-env":
+            sys.exit(setup_telemetry_environment())
+        elif args.command == "generate-dashboard":
+            sys.exit(generate_dashboard(args.results_dir, args.out))
         return
 
     parser = _build_parser()
     args = parser.parse_args()
     args.command = None
 
-    # We renamed --json to json_out to avoid clashing with the json module, wait, no, `json` is safe in args
-    # But just in case, we map it back or keep it. Let's map it.
+    if getattr(args, "cmake_dir", False):
+        cmake_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cmake")
+        print(cmake_path)
+        sys.exit(0)
+
+    # We renamed --json to json_out to avoid clashing with the json module
     if hasattr(args, "json_out"):
         args.json = args.json_out
 

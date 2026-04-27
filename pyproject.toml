@@ -24,3 +24,6 @@ petal-server = "petal.server:main"
 
 [tool.setuptools.packages.find]
 include = ["petal*", "backend*"]
+
+[tool.setuptools.package-data]
+"petal.cmake" = ["*.cmake"]

@@ -1,5 +1,6 @@
 import sys
 import unittest
+from io import StringIO
 from pathlib import Path
 from unittest.mock import patch
 
@@ -18,6 +19,10 @@ class TestCliHelpers(unittest.TestCase):
         self.assertEqual(cli._fmt_energy(0.0000009), "0.9 µJ")
         self.assertEqual(cli._fmt_energy(0.2), "200.0 mJ")
         self.assertEqual(cli._fmt_energy(2.5), "2.50 J")
+
+    def test_fmt_energy_unit_boundaries(self):
+        self.assertEqual(cli._fmt_energy(0.001), "1.0 mJ")
+        self.assertEqual(cli._fmt_energy(1.0), "1.00 J")
 
     def test_fmt_time_uses_expected_units(self):
         self.assertEqual(cli._fmt_time(0.0000009), "1 µs")
@@ -64,9 +69,12 @@ class TestCliHelpers(unittest.TestCase):
         check.assert_called_once()
 
     def test_main_exits_without_file_argument(self):
+        out = StringIO()
         with patch.object(sys, "argv", ["petal"]):
-            with self.assertRaises(SystemExit) as ctx:
-                cli.main()
+            with patch("sys.stdout", out):
+                with self.assertRaises(SystemExit) as ctx:
+                    cli.main()
+        self.assertIn("usage:", out.getvalue())
         self.assertEqual(ctx.exception.code, 1)
 
 

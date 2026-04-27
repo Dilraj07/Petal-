@@ -44,6 +44,7 @@ int main() {
         self.assertIn("C[i_index][jj] += A[ii][kk] * B[kk][jj];", transformed)
         self.assertIn("i_index", transformed)
         self.assertNotIn("ii_index", transformed)
+        self.assertNotIn("C[i_index][j] += A[i][k] * B[k][j];", transformed)
 
 
 if __name__ == "__main__":
